@@ -247,6 +247,7 @@ module.exports = function plugin(command, targets, opts) {
                                 } else {
                                     // Create package.json in cordova@7
                                 }
+                                
                                 // If package.json exists, the plugin object and plugin name 
                                 // will be added to package.json if not already there.
                                 if (!pkgJson) {
@@ -335,10 +336,16 @@ module.exports = function plugin(command, targets, opts) {
                                 }
                                 // If package.json exists and contains a specified plugin in cordova['plugins'], it will be removed    
                                 if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {
+<<<<<<< HEAD
                                     events.emit('log', 'Removing [' + target + '] from package.json');
                                     // Remove plugin from package.json
                                     delete pkgJson.cordova.plugins[target];
                                     //Write out new package.json with plugin removed correctly.
+=======
+                                    events.emit('log', 'Removing ' + target + ' from package.json');
+                                    delete pkgJson.cordova.plugins[target];
+                                    //Write out new package.json 
+>>>>>>> CB-11960: Added support to package.json for platform/plugin add/rm
                                     fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                                 }
                             }

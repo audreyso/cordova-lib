@@ -22,7 +22,13 @@
     events = require('cordova-common').events,
     ConfigParser = require('cordova-common').ConfigParser,
     cordova = require('../src/cordova/cordova'),
-    TIMEOUT = 60 * 1000;
+    TIMEOUT = 60 * 1000,
+    fs = require('fs'),
+    Q = require('q'),
+    rewire = require('rewire'),
+    prepare = require('../src/cordova/prepare'),
+    platforms = require('../src/platforms/platforms'),
+    platform = rewire('../src/cordova/platform.js');
 
 /** Testing will check if "cordova prepare" is restoring platforms and plugins as expected.
 *   Uses different basePkgJson files depending on testing expecations of what (platforms/plugins/variables)
@@ -30,13 +36,13 @@
 */
 
 // Use basePkgJson
-describe('tests platform/spec restore with --save', function () {
-    var tmpDir = helpers.tmpDir('platform_test_pkgjson2');
+describe('end-to-end tests platform/spec restore with --save', function () {
+    var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
     var results;
 
     beforeEach(function() {
-        shell.rm('-rf', project);
+        shell.rm('-rf', tpmDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
         shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson'), tmpDir);
@@ -129,7 +135,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},300000);
+    },300000);
 
     /** Test#017
     *   When platform is added with url and fetch and restored with fetch, 
@@ -213,7 +219,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 
     /** Test#018
     *   When plugin is added with url and fetch and restored with fetch, 
@@ -287,7 +293,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson
@@ -393,7 +399,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson6 because pkg.json and config.xml contain only android
@@ -465,7 +471,7 @@ describe('files should not be modified if their platforms are identical', functi
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use a new basePkgJson5 as config.xml contains android/browser and pkg.json contains android
@@ -550,7 +556,7 @@ describe('update pkg.json to include platforms in config.xml', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson3 as it has 'android' in config.xml and pkg.json (no cordova key).
@@ -629,7 +635,7 @@ describe('update empty package.json to match config.xml', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
  });
 
 // Use a new basePkgJson4 as pkg.json contains android/browser and config.xml contains android.
@@ -715,7 +721,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Plugin testing begins here.
@@ -802,7 +808,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson9 as config contains 1 plugin and 1 variable and pkg.json contains 1 plugin 0 var
@@ -888,7 +894,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson10 as pkg.json contains (camera plugin: var 1/var 2, splashscreen plugin). 
@@ -1011,7 +1017,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson11 as pkg.json contains(splashscreen plugin, camera plugin: var1, value1, var2, value2) and
@@ -1154,7 +1160,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson12 as config.xml has 0 plugins and pkg.json has 1.
@@ -1254,7 +1260,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 // Use basePkgJson13 - does NOT have a package.json
@@ -1398,7 +1404,7 @@ describe('platforms and plugins should be restored with config.xml even without 
         expect(err).toBeUndefined();
     }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });
 
 
@@ -1565,5 +1571,5 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 });

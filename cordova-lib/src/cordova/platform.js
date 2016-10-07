@@ -87,7 +87,16 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
         var platformsToSave = []; 
 
         // If statement to see if pkgJsonPath exists in the filesystem
-        
+        var modifiedPkgJson = false;
+        var pkgJson;
+        var pkgJsonPath = path.join(projectRoot, 'package.json');
+        // If statement to see if pkgJsonPath exists in the filesystem
+        if(fs.existsSync(pkgJsonPath)) {
+            pkgJson = require(pkgJsonPath);
+        } else {
+            // Create package.json in cordova@7
+        }
+
         return promiseutil.Q_chainmap(targets, function(target) {
             // For each platform, download it and call its helper script.
             var parts = target.split('@');
@@ -222,6 +231,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 .then(function() {
                     var saveVersion = !spec || semver.validRange(spec, true);
 
+
                     // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
                     // source location was specified, we always save that. Otherwise we save the version that was
                     // actually installed.
@@ -240,6 +250,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         cfg.removeEngine(platform);
                         cfg.addEngine(platform, spec);
                         cfg.write();
+<<<<<<< HEAD
                         
                         //save to add to pacakge.json's cordova.platforms array in the next then
                         platformsToSave.push(platform);
@@ -276,6 +287,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 });
             }
             //save to package.json
+        }).then(function(){
             if (modifiedPkgJson === true) {
                 pkgJson.cordova.platforms = pkgJson.cordova.platforms.sort();
                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');

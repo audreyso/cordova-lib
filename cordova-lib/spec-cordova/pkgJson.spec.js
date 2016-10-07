@@ -22,7 +22,13 @@ var helpers = require('./helpers'),
     events = require('cordova-common').events,
     ConfigParser = require('cordova-common').ConfigParser,
     cordova = require('../src/cordova/cordova'),
-    TIMEOUT = 30 * 1000;
+    TIMEOUT = 30 * 1000,
+    Q = require('q'),
+    cordova = require('../src/cordova/cordova'),
+    rewire = require('rewire'),
+    prepare = require('../src/cordova/prepare'),
+    platforms = require('../src/platforms/platforms'),
+    platform = rewire('../src/cordova/platform.js');
 
 // This group of tests checks if plugins are added and removed as expected from package.json.
 describe('plugin end-to-end', function() {
@@ -313,7 +319,7 @@ describe('platform end-to-end with --save', function () {
             // And now remove it without --save.
             return cordova.raw.platform('rm', [helpers.testPlatform]);
         }).then(function() {
-            // Delete any previous caches of require(package.json).
+            // Delete any previous caches of require(package.json)
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             // Check that the platform removed without --save is still in platforms key.
@@ -328,6 +334,7 @@ describe('platform end-to-end with --save', function () {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
         expect(pkgJsonPath).toExist();
+
         // Delete any previous caches of require(package.json).
         delete require.cache[require.resolve(pkgJsonPath)];
         pkgJson = require(pkgJsonPath);
@@ -374,6 +381,7 @@ describe('platform end-to-end with --save', function () {
         })
         .fin(done);
     }, TIMEOUT);
+
     it('Test#010 : two platforms are added and removed correctly with --save --fetch', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         expect(pkgJsonPath).toExist();
