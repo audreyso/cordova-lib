@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-
+var projectRoot = cordova_util.cdProjectRoot();
 var config            = require('./config'),
     cordova           = require('./cordova'),
     prepare           = require('./prepare'),
@@ -38,9 +38,9 @@ var config            = require('./config'),
     _                 = require('underscore'),
     PlatformJson      = require('cordova-common').PlatformJson,
     fetch             = require('cordova-fetch'),
-    npmUninstall         = require('cordova-fetch').uninstall,
+    npmUninstall      = require('cordova-fetch').uninstall,
     platformMetadata  = require('./platform_metadata');
-
+ 
 // Expose the platform parsers on top of this command
 for (var p in platforms) {
     module.exports[p] = platforms[p];
@@ -235,6 +235,25 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         cfg.removeEngine(platform);
                         cfg.addEngine(platform, spec);
                         cfg.write();
+
+                        var packageJsonPath = projectRoot + '/package.json';
+                        var packageJson = require(packageJsonPath);
+
+                        if (packageJson.cordova === undefined) {
+                            packageJson.cordova = {};
+                        }
+                        if (packageJson.cordova.platforms === undefined){
+                            events.emit('cordova.platforms is undefined');
+                            packageJson.cordova.platforms = [];
+                        }
+                        if (packageJson.cordova.platforms.indexOf(platform) === -1) {
+                            events.emit('adding '+platform+' to platforms key');
+                            packageJson.cordova.platforms.push(platform);
+                            events.emit(packageJson.cordova.platforms);
+                            fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 4), 'utf8');
+                        } else {
+                            events.emit(platform + ' already added to platforms key');
+                        }
                     }
                 });
             });
