@@ -16,7 +16,6 @@
     specific language governing permissions and limitations
     under the License.
 */
-var projectRoot = cordova_util.cdProjectRoot();
 var config            = require('./config'),
     cordova           = require('./cordova'),
     prepare           = require('./prepare'),
@@ -84,6 +83,16 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
 
     return hooksRunner.fire('before_platform_' + cmd, opts)
     .then(function() {
+        var modifiedPkgJson = false;
+        var pkgJson = undefined;
+        var pkgJsonPath = path.join(projectRoot, 'package.json');
+        // If statement to see if pkgJsonPath exists in the filesystem
+        if(fs.existsSync(pkgJsonPath)) {
+            pkgJson = require(pkgJsonPath);
+        } else {
+            // Create package.json in cordova@7
+        }
+
         return promiseutil.Q_chainmap(targets, function(target) {
             // For each platform, download it and call its helper script.
             var parts = target.split('@');
@@ -217,6 +226,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 .then(function() {
                     var saveVersion = !spec || semver.validRange(spec, true);
 
+
                     // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
                     // source location was specified, we always save that. Otherwise we save the version that was
                     // actually installed.
@@ -236,29 +246,33 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         cfg.addEngine(platform, spec);
                         cfg.write();
 
-                        var packageJsonPath = projectRoot + '/package.json';
-                        var packageJson = require(packageJsonPath);
-
-                        if (packageJson.cordova === undefined) {
-                            packageJson.cordova = {};
+                        // If package.json exists, cordova key and platforms will be added to package.json if not
+                        // already there 
+                        if (pkgJson === undefined) {
+                            return;
                         }
-                        if (packageJson.cordova.platforms === undefined){
-                            events.emit('cordova.platforms is undefined');
-                            packageJson.cordova.platforms = [];
+                        if (pkgJson.cordova === undefined) {
+                            pkgJson.cordova = {};
                         }
-                        if (packageJson.cordova.platforms.indexOf(platform) === -1) {
-                            events.emit('adding '+platform+' to platforms key');
-                            packageJson.cordova.platforms.push(platform);
-                            events.emit(packageJson.cordova.platforms);
-                            fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 4), 'utf8');
+                        if (pkgJson.cordova.platforms === undefined){
+                            pkgJson.cordova.platforms = [];
+                        }
+                        if (pkgJson.cordova.platforms.indexOf(platform) === -1) {
+                            events.emit('log','adding '+platform+' to cordova.platforms array in package.json');
+                            pkgJson.cordova.platforms.push(platform);
+                            modifiedPkgJson = true;
                         } else {
-                            events.emit(platform + ' already added to platforms key');
+                            events.emit('verbose', platform + ' already added to platforms key');
                         }
                     }
                 });
             });
+        }).then(function(){
+            if (modifiedPkgJson === true) {
+                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+            }
         });
-    }).then(function() {
+    }).then(function(){
         return hooksRunner.fire('after_platform_' + cmd, opts);
     });
 }
@@ -398,6 +412,13 @@ function remove(hooksRunner, projectRoot, targets, opts) {
     }).then(function() {
         var config_json = config.read(projectRoot);
         var autosave =  config_json.auto_save_platforms || false;
+        var modifiedPkgJson = false;
+        var pkgJson = undefined;
+        var pkgJsonPath = path.join(projectRoot,'package.json');
+        // If statement to see if pkgJsonPath exists in the filesystem
+        if(fs.existsSync(pkgJsonPath)) {
+            pkgJson = require(pkgJsonPath);
+        }
         if(opts.save || autosave){
             targets.forEach(function(target) {
                 var platformName = target.split('@')[0];
@@ -406,7 +427,21 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 events.emit('log', 'Removing platform ' + target + ' from config.xml file...');
                 cfg.removeEngine(platformName);
                 cfg.write();
+                // If package.json exists and contains a specified platform in cordova.platforms, it will be removed
+                if(pkgJson != undefined && pkgJson.cordova != undefined && pkgJson.cordova.platforms != undefined) {
+                    var index = pkgJson.cordova.platforms.indexOf(platformName);
+                    //Check if platform exists in platforms array
+                    if (pkgJson.cordova.platforms != undefined && index > -1) {
+                        events.emit('log', 'Removing ' + platformName + ' from cordova.platforms array in package.json');
+                        pkgJson.cordova.platforms.splice(index, 1);
+                        modifiedPkgJson = true;
+                    }
+                }
             });
+            //Write out new package.json if changes have been made
+            if(modifiedPkgJson === true) {
+                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+            }
         }
     }).then(function() {
         // Remove targets from platforms.json
@@ -421,6 +456,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 if(target in platforms) {
                     target = 'cordova-'+target;
                 }
+                //edits package.json
                 return npmUninstall(target, projectRoot, opts);
             });
         }
