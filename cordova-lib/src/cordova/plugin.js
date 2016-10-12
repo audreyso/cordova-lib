@@ -236,13 +236,13 @@ module.exports = function plugin(command, targets, opts) {
 
                                 events.emit('results', 'Saved plugin info for "' + pluginInfo.id + '" to config.xml');
 
-                                var pkgJson = undefined;
+                                var pkgJson;
                                 var pkgJsonPath = path.join(projectRoot,'package.json');
 
                                 // If statement to see if pkgJsonPath exists in the filesystem
                                 if(fs.existsSync(pkgJsonPath)) {
                                     // Delete any previous caches of require(package.json)
-                                    delete require.cache[require.resolve(pkgJsonPath)]
+                                    delete require.cache[require.resolve(pkgJsonPath)];
                                     pkgJson = require(pkgJsonPath);
                                 } else {
                                     // Create package.json in cordova@7
@@ -255,11 +255,11 @@ module.exports = function plugin(command, targets, opts) {
                                 if (pkgJson.cordova === undefined) {
                                     pkgJson.cordova = {};
                                 }
-                                if (pkgJson.cordova['plugins'] === undefined) {
-                                    pkgJson.cordova['plugins'] = {};
+                                if (pkgJson.cordova.plugins === undefined) {
+                                    pkgJson.cordova.plugins = {};
                                 }
-                                if (pkgJson.cordova['plugins'] != undefined) {
-                                    pkgJson.cordova['plugins'][pluginInfo.id] = opts.cli_variables;
+                                if (pkgJson.cordova.plugins !== undefined) {
+                                    pkgJson.cordova.plugins[pluginInfo.id] = opts.cli_variables;
                                     events.emit('log','Adding '+pluginInfo.id+ ' to package.json');
                                     // Write to package.json
                                     fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
@@ -328,20 +328,20 @@ module.exports = function plugin(command, targets, opts) {
                                     configXml.write();
                                 }
                             }
-                            var pkgJson = undefined;
+                            var pkgJson;
                             var pkgJsonPath = path.join(projectRoot,'package.json');
                             // If statement to see if pkgJsonPath exists in the filesystem
                             if(fs.existsSync(pkgJsonPath)) {
                                 //delete any previous caches of require(package.json)
-                                delete require.cache[require.resolve(pkgJsonPath)]
+                                delete require.cache[require.resolve(pkgJsonPath)];
                                 pkgJson = require(pkgJsonPath);
                             } else {
                                 // Create package.json in cordova@7
                             }
                             // If package.json exists and contains a specified plugin in cordova['plugins'], it will be removed    
-                            if(pkgJson != undefined && pkgJson.cordova != undefined && pkgJson.cordova['plugins'] != undefined) {
+                            if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {
                                 events.emit('log', 'Removing ' + target + ' from package.json');
-                                delete pkgJson.cordova['plugins'][target];
+                                delete pkgJson.cordova.plugins[target];
                                 //Write out new package.json 
                                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                             }

@@ -84,7 +84,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
     return hooksRunner.fire('before_platform_' + cmd, opts)
     .then(function() {
         var modifiedPkgJson = false;
-        var pkgJson = undefined;
+        var pkgJson;
         var pkgJsonPath = path.join(projectRoot, 'package.json');
         // If statement to see if pkgJsonPath exists in the filesystem
         if(fs.existsSync(pkgJsonPath)) {
@@ -413,7 +413,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
         var config_json = config.read(projectRoot);
         var autosave =  config_json.auto_save_platforms || false;
         var modifiedPkgJson = false;
-        var pkgJson = undefined;
+        var pkgJson;
         var pkgJsonPath = path.join(projectRoot,'package.json');
         // If statement to see if pkgJsonPath exists in the filesystem
         if(fs.existsSync(pkgJsonPath)) {
@@ -428,10 +428,10 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 cfg.removeEngine(platformName);
                 cfg.write();
                 // If package.json exists and contains a specified platform in cordova.platforms, it will be removed
-                if(pkgJson != undefined && pkgJson.cordova != undefined && pkgJson.cordova.platforms != undefined) {
+                if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.platforms !== undefined) {
                     var index = pkgJson.cordova.platforms.indexOf(platformName);
                     //Check if platform exists in platforms array
-                    if (pkgJson.cordova.platforms != undefined && index > -1) {
+                    if (pkgJson.cordova.platforms !== undefined && index > -1) {
                         events.emit('log', 'Removing ' + platformName + ' from cordova.platforms array in package.json');
                         pkgJson.cordova.platforms.splice(index, 1);
                         modifiedPkgJson = true;
