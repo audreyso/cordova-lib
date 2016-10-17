@@ -342,8 +342,6 @@ module.exports = function plugin(command, targets, opts) {
                             if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {
                                 events.emit('log', 'Removing ' + target + ' from package.json');
                                 delete pkgJson.cordova.plugins[target];
-                                //Write out new package.json 
-                                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                             }
                         }).then(function(){
                             // Remove plugin from fetch.json
