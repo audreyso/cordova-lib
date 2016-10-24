@@ -28,6 +28,8 @@ var helpers = require('./helpers'),
     cordova = require('../src/cordova/cordova'),
     plugman = require('../src/plugman/plugman'),
     rewire = require('rewire'),
+    prepare = require('../src/cordova/prepare'),
+    platforms = require('../src/platforms/platforms'),
     platform = rewire('../src/cordova/platform.js');
 
 var projectRoot = 'C:\\Projects\\cordova-projects\\move-tracker';
@@ -92,6 +94,34 @@ describe('platform end-to-end', function () {
             expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
         });
     }
+    // Runs: list, add, list
+    function addPlugin(target, id, options) {
+        // Check there are no plugins yet.
+        return cordova.raw.plugin('list').then(function() {
+            expect(results).toMatch(/No plugins added/gi);
+        }).then(function() {
+            // Add a fake plugin from fixtures.
+            return cordova.raw.plugin('add', target, options);
+        }).then(function() {
+            expect(path.join(project, 'plugins', id, 'plugin.xml')).toExist();
+        }).then(function() {
+            return cordova.raw.plugin('ls');
+        }).then(function() {
+            expect(results).toContain(id);
+        });
+    }
+    // Runs: remove, list
+    function removePlugin(id) {
+        return cordova.raw.plugin('rm', id)
+        .then(function() {
+            // The whole dir should be gone.
+            expect(path.join(project, 'plugins', id)).not.toExist();
+        }).then(function() {
+            return cordova.raw.plugin('ls');
+        }).then(function() {
+            expect(results).toMatch(/No plugins added/gi);
+        });
+    }        
 
     // The flows we want to test are add, rm, list, and upgrade.
     // They should run the appropriate hooks.
@@ -104,6 +134,7 @@ describe('platform end-to-end', function () {
             // Add the testing platform.
             return cordova.raw.platform('add', [helpers.testPlatform]);
         }).then(function() {
+            console.log("!!!");
             // Check the platform add was successful.
             expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
             expect(path.join(project, 'platforms', helpers.testPlatform, 'cordova')).toExist();
@@ -354,147 +385,9 @@ describe('plugin add and rm end-to-end --fetch', function () {
         })
         .fin(done);
     }, 60000);
+
+    
 });
 
-describe('platform end-to-end with --save', function () {
-
-    var tmpDir = helpers.tmpDir('platform_test_pkgjson');
-    var project = path.join(tmpDir, 'project');
-    var results;
-
-    beforeEach(function() {
-        shell.rm('-rf', tmpDir);
-
-        // cp then mv because we need to copy everything, but that means it'll copy the whole directory.
-        // Using /* doesn't work because of hidden files.
-        shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson'), tmpDir);
-        shell.mv(path.join(tmpDir, 'basePkgJson'), project);
-        process.chdir(project);
-
-        // Now we load the config.json in the newly created project and edit the target platform's lib entry
-        // to point at the fixture version. This is necessary so that cordova.prepare can find cordova.js there.
-        var c = config.read(project);
-        c.lib[helpers.testPlatform].url = path.join(__dirname, 'fixtures', 'platforms', helpers.testPlatform + '-lib');
-        config.write(project, c);
-
-        // The config.json in the fixture project points at fake "local" paths.
-        // Since it's not a URL, the lazy-loader will just return the junk path.
-        spyOn(superspawn, 'spawn').andCallFake(function(cmd, args) {
-            if (cmd.match(/create\b/)) {
-                // This is a call to the bin/create script, so do the copy ourselves.
-                shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'android'), path.join(project, 'platforms'));
-            } else if(cmd.match(/version\b/)) {
-                return Q('3.3.0');
-            } else if(cmd.match(/update\b/)) {
-                fs.writeFileSync(path.join(project, 'platforms', helpers.testPlatform, 'updated'), 'I was updated!', 'utf-8');
-            }
-            return Q();
-        });
-
-        events.on('results', function(res) { results = res; });
-    });
-
-    afterEach(function() {
-        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
-        shell.rm('-rf', tmpDir);
-    });
-
-    // Factoring out some repeated checks.
-    function emptyPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
-        });
-    }
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        });
-    }
-
-    // The flows we want to test are add, rm, list, and upgrade.
-    // They should run the appropriate hooks.
-    // They should fail when not inside a Cordova project.
-    // These tests deliberately have no beforeEach and afterEach that are cleaning things up.
-    it('should successfully run', function(done) {
-        var pkgJsonPath = path.join(process.cwd(),'package.json');
-        expect(pkgJsonPath).toExist();
-        var pkgJson = require(pkgJsonPath);
-
-        // Check there are no platforms yet.
-        emptyPlatformList().then(function() {
-            // Add the testing platform.
-            // Checking to ensure packageJson.cordova is undefined
-            return cordova.raw.platform('add', [helpers.testPlatform], {'save':true});
-        }).then(function() {
-            // Check the platform add was successful.
-            expect(pkgJson.cordova.platforms).not.toBeUndefined();
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        }).then(fullPlatformList) // Platform should still be in platform ls.
-        .then(function() {
-            // And now remove it.
-            return cordova.raw.platform('rm', [helpers.testPlatform], {'save':true});
-        }).then(function() {
-            // Delete any previous caches of require(package.json)
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-            // Checking that the platform removed is in not in the platforms key
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toEqual(-1);
-        }).then(emptyPlatformList) // platform ls should be empty too.
-        .fail(function(err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
-    });
-
-    it('should not remove platforms from package.json when removing without --save', function(done) {
-        var pkgJsonPath = path.join(process.cwd(),'package.json');
-        expect(pkgJsonPath).toExist();
-        var pkgJson = require(pkgJsonPath);
-        emptyPlatformList().then(function() {
-            // Add the testing platform.
-            // Checking to ensure packageJson.cordova is undefined
-            return cordova.raw.platform('add', [helpers.testPlatform], {'save':true});
-        }).then(function() {
-            // Check the platform add was successful.
-            expect(pkgJson.cordova.platforms).not.toBeUndefined();
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        }).then(fullPlatformList) // Platform should still be in platform ls.
-        .then(function() {
-            // And now remove it.
-            return cordova.raw.platform('rm', [helpers.testPlatform]);
-        }).then(function() {
-            // Delete any previous caches of require(package.json)
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-
-            //make sure the platform you removed is still in platforms key
-            expect(pkgJson.cordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        }).then(emptyPlatformList)
-        .fail(function(err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
-    });
-
-    it('should not add platforms to package.json when adding without --save', function(done) {
-        var pkgJsonPath = path.join(process.cwd(),'package.json');
-        expect(pkgJsonPath).toExist();
-        delete require.cache[require.resolve(pkgJsonPath)];
-        var pkgJson = require(pkgJsonPath);
-
-        emptyPlatformList().then(function() {
-            expect(pkgJson.cordova).toBeUndefined();
-            return cordova.raw.platform('add', [helpers.testPlatform]);
-        }).then(function() {
-            // Check the platform add was successful.
-            delete require.cache[require.resolve(pkgJsonPath)];
-            pkgJson = require(pkgJsonPath);
-        }).then(fullPlatformList) // Platform should still be in platform ls.
-        .fail(function(err) {
-            expect(err).toBeUndefined();
-        }).fin(done);
-    });
-});
-
+        // Runs: list, add, list
+    
