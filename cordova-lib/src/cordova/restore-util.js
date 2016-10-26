@@ -63,6 +63,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
             // Combining arrays and checking duplicates.
             comboArray = pkgJsonPlatforms.slice();
         }
+
         engines = cfg.getEngines(projectHome);
         configPlatforms = engines.map(function(Engine) {
             var configPlatName = Engine.name;
@@ -136,7 +137,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
                     }
                     mergedPlatformSpecs[item] = pkgJson.dependencies[item];
                 }
-
                 // First remove the engine and then add missing engine and elements to config.xml.
                 // Remove to avoid duplicate engines.
                 if(mergedPlatformSpecs[item]) {
@@ -239,6 +239,7 @@ function installPluginsFromConfigXML(args) {
         comboObject = {};
         comboPluginIdArray = [];
     }
+<<<<<<< HEAD
 
     // Get all config.xml plugin ids (names).
     var pluginIdConfig = cfg.getPluginIdList();
@@ -338,6 +339,96 @@ function installPluginsFromConfigXML(args) {
         }
     });
 
+=======
+
+    // Get all config.xml plugin ids (names).
+    var pluginIdConfig = cfg.getPluginIdList();
+    if(pluginIdConfig === undefined) {
+        pluginIdConfig = [];
+    }
+
+    if(pkgJson !== undefined) {
+        if (pkgJson.cordova === undefined) {
+            pkgJson.cordova = {};
+        }
+        if (pkgJson.cordova.plugins === undefined) {
+            pkgJson.cordova.plugins = {};
+        }
+
+        // Check to see which plugins are initially the same in pkg.json and config.xml.
+        // Add missing plugin variables in package.json from config.xml.
+        comboPluginIdArray.forEach(function(item) {
+            if(pluginIdConfig.includes(item)) {
+                configPlugin = cfg.getPlugin(item);
+                configPluginVariables = configPlugin.variables;
+                pkgJsonPluginVariables = comboObject[item];
+                for(var key in configPluginVariables) {
+                    // Handle conflicts, package.json wins.
+                    // Only add the variable to package.json if it doesn't already exist.
+                    if(pkgJsonPluginVariables[key] === undefined) {
+                        pkgJsonPluginVariables[key] = configPluginVariables[key];
+                        comboObject[item][key] = configPluginVariables[key];
+                        modifiedPkgJson = true;
+                    }
+                }
+            }
+            // Get the spec from package.json and add it to mergedPluginSpecs.
+            if (pkgJson.dependencies && pkgJson.dependencies[item]) {
+                mergedPluginSpecs[item] = pkgJson.dependencies[item];
+            }
+        });
+
+        // Check to see if pkg.json plugin(id) and config plugin(id) match.
+        if(comboPluginIdArray.sort().toString() !== pluginIdConfig.sort().toString()) {
+            // If there is a config plugin that does NOT already exist in
+            // mergedPluginDataArray, add it and its variables.
+            pluginIdConfig.forEach(function(item) {
+                if(comboPluginIdArray.indexOf(item) < 0) {
+                    comboPluginIdArray.push(item);
+                    var configXMLPlugin = cfg.getPlugin(item);
+                    comboObject[item] = configXMLPlugin.variables;
+                    modifiedPkgJson = true;
+                }
+            });
+        }
+
+        // Add specs from config.xml to mergedPluginSpecs.
+        pluginIdConfig.forEach(function(item) {
+            var configXMLPlugin = cfg.getPlugin(item);
+            if(mergedPluginSpecs[item] === undefined && configXMLPlugin.spec) {
+                mergedPluginSpecs[item] = configXMLPlugin.spec;
+                modifiedPkgJson = true;
+            }
+        });
+        // If pkg.json plugins have been modified, write to it.
+        if (modifiedPkgJson === true) {
+            pkgJson.cordova.plugins = comboObject;
+            if(pkgJson.dependencies === undefined) {
+                pkgJson.dependencies = {};
+            }
+            for(key in mergedPluginSpecs) {
+                pkgJson.dependencies[key] = mergedPluginSpecs[key];
+            }
+            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+        }
+    }
+    // Write config.xml (only if plugins exist in package.json).
+    comboPluginIdArray.forEach(function(plugID) {
+        if(pluginIdConfig.indexOf(plugID) < 0) {
+            pluginIdConfig.push(plugID);
+        }
+        cfg.removePlugin(plugID);
+        if (mergedPluginSpecs[plugID]) {
+            cfg.addPlugin({name:plugID, spec: mergedPluginSpecs[plugID]}, comboObject[plugID]); 
+            modifiedConfigXML = true;
+        // If no spec, just add the plugin.
+        } else {
+            cfg.addPlugin({name:plugID}, comboObject[plugID]); 
+            modifiedConfigXML = true;
+        }
+    });
+
+>>>>>>>  fixfetch : (CB-12021), fixed fetch after rebase and merge from CB-11960
     if (modifiedConfigXML === true) {
         cfg.write();    
     }

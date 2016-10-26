@@ -39,7 +39,7 @@ var config            = require('./config'),
     fetch             = require('cordova-fetch'),
     npmUninstall      = require('cordova-fetch').uninstall,
     platformMetadata  = require('./platform_metadata');
- 
+
 // Expose the platform parsers on top of this command
 for (var p in platforms) {
     module.exports[p] = platforms[p];
@@ -102,34 +102,68 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             var parts = target.split('@');
             var platform = parts[0];
             var spec = parts[1];
-
+            var pkgJson;
+            var pkgJsonPath = path.join(projectRoot, 'package.json');
+            if(fs.existsSync(pkgJsonPath)) {
+                delete require.cache[require.resolve(pkgJsonPath)]; 
+                pkgJson = require(pkgJsonPath);
+            }
             return Q.when().then(function() {
+                var prefixCordovaPlatform = 'cordova-'+platform;
                 if (!(platform in platforms)) {
                     spec = platform;
                     platform = null;
                 }
-
                 if(platform === 'amazon-fireos') {
                     events.emit('warn', 'amazon-fireos has been deprecated. Please use android instead.');
                 }
                 if(platform === 'wp8') {
                     events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
                 }
+                // Instead of always writing to package.json like you do below, 
+                // If pkgJson.dependencies[prefixCordovaPlatform] or pkgJson.dependencies[platform] exist and semver satisfy the passed in spec. 
+                // If they do exist and satisfy fails, then write to package.json
+                if(spec && pkgJson && pkgJson.dependencies && (pkgJson.dependencies[prefixCordovaPlatform] || pkgJson.dependencies[platform])) {
+                    if ((semver.satisfies(spec, pkgJson.dependencies[prefixCordovaPlatform])) || (semver.satisfies(spec, pkgJson.dependencies[platform]))) {
+                    } else {
+                        if (pkgJson.dependencies[prefixCordovaPlatform]) {
+                            pkgJson.dependencies[prefixCordovaPlatform] = '^'+spec;
+                        } else if (pkgJson.dependencies[platform]) {
+                            pkgJson.dependencies[platform] = '^'+spec;
+                        }
+                        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                    }
+                }
+
+                // If there is no spec specified during add, use the one from pkg.json.
+                if (spec === undefined && pkgJson && pkgJson.dependencies) {
+                    if (pkgJson.dependencies[prefixCordovaPlatform]) {
+                        spec = pkgJson.dependencies[prefixCordovaPlatform];
+                    } else if (pkgJson.dependencies[platform]) {
+                        spec = pkgJson.dependencies[platform];
+                    }
+                }
+                // If there is no spec in pkg.json, use config.xml.
                 if (platform && !spec && cmd == 'add') {
                     events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     spec = getVersionFromConfigFile(platform, cfg);
-                }
-
-                // If --save/autosave on && no version specified, use the pinned version
+                }  
+                // If --save/autosave on && no version specified, use the pinned version.
                 // e.g: 'cordova platform add android --save', 'cordova platform update android --save'
                 if( (opts.save || autosave) && !spec ){
                     spec = platforms[platform].version;
                 }
-
                 if (spec) {
                     var maybeDir = cordova_util.fixRelativePath(spec);
                     if (cordova_util.isDirectory(maybeDir)) {
-                        return getPlatformDetailsFromDir(maybeDir, platform);
+                        if (opts.fetch) {
+                            return fetch(spec, projectRoot, opts)
+                            .then(function (directory) {
+                                return getPlatformDetailsFromDir(directory,platform)
+                            });
+                        } else {
+                            return getPlatformDetailsFromDir(maybeDir, platform);
+                        }
                     }
                 }
                 return downloadPlatform(projectRoot, platform, spec, opts);
@@ -145,7 +179,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     if (platformAlreadyAdded) {
                         throw new CordovaError('Platform ' + platform + ' already added.');
                     }
-
                     // Remove the <platform>.json file from the plugins directory, so we start clean (otherwise we
                     // can get into trouble not installing plugins if someone deletes the platform folder but
                     // <platform>.json still exists).
@@ -156,7 +189,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                             cordova_util.binname + ' platform list`.');
                     }
                 }
-
                 if (/-nightly|-dev$/.exec(platDetails.version)) {
                     msg = 'Warning: using prerelease platform ' + platform +
                           '@' + platDetails.version +
@@ -177,7 +209,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     config_json.lib[platform].template) {
                     options.customTemplate = config_json.lib[platform].template;
                 }
-
                 events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
                 var PlatformApi;
                 try {
@@ -230,8 +261,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 })
                 .then(function() {
                     var saveVersion = !spec || semver.validRange(spec, true);
-
-
                     // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
                     // source location was specified, we always save that. Otherwise we save the version that was
                     // actually installed.
@@ -242,16 +271,15 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     if(opts.save || autosave){
                         // Similarly here, we save the source location if that was specified, otherwise the version that
                         // was installed. However, we save it with the "~" attribute (this allows for patch updates).
-                        spec = saveVersion ? '~' + platDetails.version : spec;
-
+                        if (spec.charAt(0) !== '~' && spec.charAt(0) !== '^') {
+                            spec = saveVersion ? '~' + platDetails.version : spec;
+                        }
                         // Save target into config.xml, overriding already existing settings
                         events.emit('log', '--save flag or autosave detected');
                         events.emit('log', 'Saving ' + platform + '@' + spec + ' into config.xml file ...');
                         cfg.removeEngine(platform);
                         cfg.addEngine(platform, spec);
                         cfg.write();
-<<<<<<< HEAD
-                        
                         //save to add to pacakge.json's cordova.platforms array in the next then
                         platformsToSave.push(platform);
                     }
@@ -286,7 +314,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     } 
                 });
             }
-            //save to package.json
+
         }).then(function(){
             if (modifiedPkgJson === true) {
                 pkgJson.cordova.platforms = pkgJson.cordova.platforms.sort();
@@ -413,12 +441,10 @@ function getVersionFromConfigFile(platform, cfg) {
     if(!platform || ( !(platform in platforms) )){
         throw new CordovaError('Invalid platform: ' + platform);
     }
-
     // Get appropriate version from config.xml
     var engine = _.find(cfg.getEngines(), function(eng){
         return eng.name.toLowerCase() === platform.toLowerCase();
     });
-
     return engine && engine.spec;
 }
 
@@ -451,10 +477,10 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 events.emit('log', 'Removing platform ' + target + ' from config.xml file...');
                 cfg.removeEngine(platformName);
                 cfg.write();
-                // If package.json exists and contains a specified platform in cordova.platforms, it will be removed
+                // If package.json exists and contains a specified platform in cordova.platforms, it will be removed.
                 if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.platforms !== undefined) {
                     var index = pkgJson.cordova.platforms.indexOf(platformName);
-                    //Check if platform exists in platforms array
+                    //Check if platform exists in platforms array.
                     if (pkgJson.cordova.platforms !== undefined && index > -1) {
                         events.emit('log', 'Removing ' + platformName + ' from cordova.platforms array in package.json');
                         pkgJson.cordova.platforms.splice(index, 1);
@@ -462,25 +488,25 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                     }
                 }
             });
-            //Write out new package.json if changes have been made
+            //Write out new package.json if changes have been made.
             if(modifiedPkgJson === true) {
                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
             }
         }
     }).then(function() {
-        // Remove targets from platforms.json
+        // Remove targets from platforms.json.
         targets.forEach(function(target) {
             events.emit('verbose', 'Removing platform ' + target + ' from platforms.json file...');
             platformMetadata.remove(projectRoot, target);
         });
     }).then(function() {
-        //Remove from node_modules if it exists and --fetch was used
+        //Remove from node_modules if it exists and --fetch was used.
         if(opts.fetch) {
             return promiseutil.Q_chainmap(targets, function(target) {
                 if(target in platforms) {
                     target = 'cordova-'+target;
                 }
-                //edits package.json
+                // Edits package.json.
                 return npmUninstall(target, projectRoot, opts);
             });
         }

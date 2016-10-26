@@ -66,6 +66,14 @@ describe('end-to-end tests platform/spec restore with --save', function () {
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
         });
     }
+
+    function fullPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+        });
+    }
     /** Test#000 will check that when a platform is added with a spec, it will 
     *   add to pkg.json with a '^' and to config.xml with a '~'. When prepare is run,
     *   pkg.json will have no change and config.xml (first char) will change from a '~' to a '^'.
@@ -334,6 +342,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
         });
     }
+
     /** Test#003 will add two platforms to package.json - one with the 'save' flag and one
     *   without the 'save' flag. It will remove both platforms without a 'save' flag.
     *   After running cordova prepare, only the platform added with the 'save' flag is restored
