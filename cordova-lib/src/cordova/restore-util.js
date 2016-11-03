@@ -238,6 +238,7 @@ function installPluginsFromConfigXML(args) {
     var comboPluginArray;
 
     // Get all configured plugins
+
     var plugins = cfg.getPluginIdList();
     if (0 === plugins.length) {
         return Q('No plugins found in config.xml that haven\'t been added to the project');
@@ -254,7 +255,9 @@ function installPluginsFromConfigXML(args) {
     if (cfg !== undefined && pkgJson !== undefined && pkgJson.cordova.platforms !== undefined && 
     pkgJson.cordova.plugins === undefined) {
         pkgJson.cordova.plugins = {};
-        pkgJson.cordova.plugins = plugins;
+        plugins.forEach(function(foo) {
+            pkgJson.cordova.plugins[foo] = {}
+        })
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
     }
     // Created, but don't think this is necessary because there has to be at least one platform
@@ -265,7 +268,9 @@ function installPluginsFromConfigXML(args) {
     pkgJson.cordova.plugins === undefined) {
         pkgJson.cordova.platforms = [];
         pkgJson.cordova.plugins = {};
-        pkgJson.cordova.plugins = plugins;
+        plugins.forEach(function(foo) {
+            pkgJson.cordova.plugins[foo] = {}
+        })
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
     }
 
@@ -292,6 +297,8 @@ function installPluginsFromConfigXML(args) {
                     comboPluginArray.push(item);
                 }
             });
+
+            // Update pkg.json if it's missing any plugins based on plugin.id 
             if(comboPluginArray.sort().toString() !== pkgJsonArray.sort().toString() && pkgJsonArray.length > 0) {
                 events.emit('warn', 'Config.xml and package.json plugins are not the same. Updating package.json with most current list of plugins.');
                 comboPluginArray.forEach(function(item) {
@@ -304,7 +311,7 @@ function installPluginsFromConfigXML(args) {
                 });
                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
             }
-
+            // Update pkg.json if it's missing any plugins based on plugin.id 
             if(comboPluginArray.toString() !== plugins.toString()) {
                 events.emit('warn', 'Config.xml and package.json plugins are not the same. Updating config.xml with most current list of plugins.');
                 comboPluginArray.forEach(function(item) {
