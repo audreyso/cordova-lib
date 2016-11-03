@@ -93,7 +93,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
                 comboArray.push(item);
             }
         });
-        // Use case # 1
         // If config.xml & pkgJson exist and the cordova key is undefined, create a cordova key.
         if (cfg !== undefined && pkgJson !== undefined && pkgJson.cordova === undefined) {
             pkgJson.cordova = {};
@@ -107,6 +106,10 @@ function installPlatformsFromConfigXML(platforms, opts) {
                 return t;
             }); 
 
+        if (!targets || !targets.length) {
+           return Q('No platforms found in config.xml that haven\'t been added to the project');
+        }
+
             var uniq = targetPlatformsArray.reduce(function(a,b){
                 if (a.indexOf(b) < 0 ) a.push(b);
                 return a;
@@ -118,7 +121,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
             modifiedPkgJson = true;
             //fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
         }
-        // Use case # 2
         // If config.xml and pkg.json exist and both already contain platforms, run cordova prepare
         // so that both files are identical
         if(cfg !== undefined && targetsConfig !== undefined && pkgJson.cordova.platforms !== undefined) {
@@ -174,7 +176,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
                 if(pkgJson.cordova.platforms.indexOf(item) < 0 ) {
                     pkgJson.cordova.platforms.push(item);
                     modifiedPkgJson = true;
-                    //fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                 }
             });
         }
@@ -187,7 +188,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
                     configEngArray.push(item);
                     modifiedConfigXML = true;
                     cfg.addEngine(item);
-                    //cfg.write();
                 }
             });
         }
@@ -275,7 +275,6 @@ function installPluginsFromConfigXML(args) {
         return elem.name;
     });
 
-    // Use case # 2
     // If config.xml and pkg.json exist and both already contain plugins, run cordova prepare
     // to check if these plugins are identical.
     if(cfg !== undefined && pkgJson.cordova.plugins !== undefined) {
