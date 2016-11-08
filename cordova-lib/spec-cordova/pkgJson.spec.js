@@ -199,6 +199,40 @@ describe('plugin end-to-end', function() {
             expect(err).toBeUndefined();
         }).fin(done);
     });
+    it('Test#005 : should successfully add and remove multiple plugins with save & fetch', function(done) {
+        var pkgJsonPath = path.join(process.cwd(),'package.json');
+        var pkgJson;
+    
+        expect(pkgJsonPath).toExist();
+
+        // Add the plugin with --save
+        return cordova.raw.plugin('add', [pluginId,'cordova-plugin-device-motion'], {'save':true, 'fetch':true})
+        .then(function() {
+            // Check that the plugin add was successful.
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            expect(pkgJson).not.toBeUndefined();
+            expect(pkgJson.cordova.plugins).not.toBeUndefined();
+            expect(pkgJson.cordova.plugins[pluginId]).toBeDefined();
+            expect(pkgJson.cordova.plugins['cordova-plugin-device-motion']).toBeDefined();
+            expect(pkgJson.dependencies[pluginId]).toBeDefined();
+            expect(pkgJson.dependencies['cordova-plugin-device-motion']).toBeDefined();
+        }).then(function() {
+            // And now remove it with --save.
+            return cordova.raw.plugin('rm', [pluginId,'cordova-plugin-device-motion'], {'save':true, 'fetch':true})
+        }).then(function() {
+            // Delete any previous caches of require(package.json)
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // Checking that the plugin removed is in not in the platforms
+            expect(pkgJson.cordova.plugins[pluginId]).toBeUndefined();
+            expect(pkgJson.cordova.plugins['cordova-plugin-device-motion']).toBeUndefined();
+            expect(pkgJson.dependencies[pluginId]).toBeUndefined();
+            expect(pkgJson.dependencies['cordova-plugin-device-motion']).toBeUndefined();
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    });
 });
 
 // This group of tests checks if platforms are added and removed as expected from package.json.
