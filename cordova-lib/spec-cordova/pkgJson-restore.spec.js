@@ -1069,4 +1069,101 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
     },30000);
 });
 
+// Use basePkgJson12 as config.xml has 0 plugins and pkg.json has 1
+describe('update config.xml to include the plugin that is in pkg.json', function () {
+    var tmpDir = helpers.tmpDir('platform_test_pkgjson');
+    var project = path.join(tmpDir, 'project');
+    var results;
+
+    beforeEach(function() {
+        shell.rm('-rf', tmpDir);
+        // Copy then move because we need to copy everything, but that means it will copy the whole directory.
+        // Using /* doesn't work because of hidden files.
+        shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson12'), tmpDir);
+        shell.mv(path.join(tmpDir, 'basePkgJson12'), project);
+        process.chdir(project);
+        events.on('results', function(res) { results = res; });
+    });
+
+    afterEach(function() {
+        var cwd = process.cwd();
+        delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    // Factoring out some repeated checks.
+    function emptyPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
+        });
+    }
+
+    function fullPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+        });
+    }
+
+    /** Test#015 will check the plugin/variable list in package.json and config.xml. 
+    *   When config has 0 plugins, it will get updated with the plugins from
+    *   pkg.json.
+    */
+    it('Test#015 : update config.xml to include all plugins/variables from pkg.json', function(done) {
+        var cwd = process.cwd();
+        var configXmlPath = path.join(cwd, 'config.xml');
+        var pkgJsonPath = path.join(cwd,'package.json');
+        delete require.cache[require.resolve(pkgJsonPath)];
+        var cfg1 = new ConfigParser(configXmlPath);
+        var configPlugins = cfg1.getPluginIdList();
+        var pkgJson = require(pkgJsonPath);
+        var configPlugin;
+        var configPluginVariables;
+
+        // Config.xml is initially empty and has no plugins
+        expect(Object.keys(configPlugins).length === 0);
+        // Expect that pkg.json exists with 1 plugin
+        expect(pkgJson.cordova.plugins).toBeDefined();
+        expect(Object.keys(pkgJson.cordova.plugins).length === 1);
+        expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toBeDefined();
+        // Pkg.json camera plugin has var1, value 1
+        expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toEqual({ variable_1: 'value_1' });
+
+        emptyPlatformList().then(function() {
+            // Run cordova prepare
+            return cordova.raw.prepare();
+        }).then(function() {
+            // Delete any previous caches of require(package.json)
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            var cfg2 = new ConfigParser(configXmlPath);
+            configPlugins = cfg2.getPluginIdList();
+
+            // Check to make sure that the variables were added as expected
+            for (var i = 0; i < configPlugins.length; i++) {
+                configPlugin = cfg2.getPlugin(configPlugins[i]);
+                configPluginVariables = configPlugin.variables;
+                // Config.xml camera variables have been added
+                if(configPlugin.name === 'cordova-plugin-camera') {
+                    expect(configPluginVariables).toEqual({ variable_1: 'value_1' });
+                }
+            }
+            // Config.xml now has the camera plugin
+            expect(Object.keys(configPlugins).length === 1);
+            expect(configPlugins.indexOf('cordova-plugin-camera')).toEqual(0);
+            // No changes to pkg.json
+            expect(Object.keys(pkgJson.cordova.plugins).length === 1);
+            expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toBeDefined();
+            expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toEqual({ variable_1: 'value_1' });
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    // Cordova prepare needs extra wait time to complete.
+    },30000);
+});
+
 
