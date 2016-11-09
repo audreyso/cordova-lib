@@ -163,16 +163,16 @@ function installPlatformsFromConfigXML(platforms, opts) {
 
             // If ConfigAndPkgJson array has the same platforms as pkg.json, no modification to pkg.json.
             if(ConfigAndPkgJsonArray.toString() === pkgJson.cordova.platforms.toString()) {
-                events.emit('warn', 'Config.xml and package.json platforms are the same. No pkg.json modification.');
+                events.emit('verbose', 'Config.xml and package.json platforms are the same. No pkg.json modification.');
             }
             // If ConfigAndPkgJson array has the same platforms as config.xml, no modification to config.xml.
             if(ConfigAndPkgJsonArray.toString() === configEngArray.toString()) {
-                events.emit('warn', 'Package.json and config.xml are the same. No config.xml modification.');
+                events.emit('verbose', 'Package.json and config.xml are the same. No config.xml modification.');
             }
             // If ConfigAndPkgJson array do not have the same platforms, modify pkg.json to include the elements
             // from the ConfigAndPkgJson array so that the arrays are identical
             if(ConfigAndPkgJsonArray.toString() !== pkgJson.cordova.platforms.toString()) {
-                events.emit('warn', 'Config.xml and package.json platforms are not the same. Updating package.json with most current list of platforms.');
+                events.emit('verbose', 'Config.xml and package.json platforms are not the same. Updating package.json with most current list of platforms.');
                 ConfigAndPkgJsonArray.forEach(function(item) {
                     if(pkgJson.cordova.platforms.indexOf(item) < 0 ) {
                         pkgJson.cordova.platforms.push(item);
@@ -183,7 +183,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
             // If ConfigAndPkgJson array do not have the same platforms, modify config.xml to include the elements
             // from the ConfigAndPkgJson array so that the arrays are identical
             if(ConfigAndPkgJsonArray.toString() !== configEngArray.toString()) {
-                events.emit('warn', 'Package.json and config.xml platforms are not the same. Updating config.xml with most current list of platforms.');
+                events.emit('verbose', 'Package.json and config.xml platforms are not the same. Updating config.xml with most current list of platforms.');
                 ConfigAndPkgJsonArray.forEach(function(item) {
                     if(configEngArray.indexOf(item) < 0 ) {
                         configEngArray.push(item);
@@ -324,11 +324,11 @@ function installPluginsFromConfigXML(args) {
     // to check if these plugins are identical.
     if(cfg !== undefined && pkgJson.cordova.plugins !== undefined) {
         if(pkgJsonArray.toString() === pluginIdConfig.toString() && pkgJsonArray.length === pluginIdConfig.length) {
-            events.emit('warn', 'Config.xml and pkgJson plugins are the same. No pkg.json or config.xml modification.');
+            events.emit('verbose', 'Config.xml and pkgJson plugins are the same. No pkg.json or config.xml modification.');
         }
 
         if(pkgJsonArray.toString() !== pluginIdConfig.toString() || pkgJsonArray.length !== pluginIdConfig.length) {
-           events.emit('warn', 'Config.xml and pkgJson plugins are different.');
+           events.emit('verbose', 'Config.xml and pkgJson plugin names are different.');
             // Combining arrays and checking duplicates
 
             comboPluginArray = pkgJsonArray.slice();
