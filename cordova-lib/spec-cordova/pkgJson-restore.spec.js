@@ -18,29 +18,16 @@
 */
 var helpers = require('./helpers'),
     path = require('path'),
-    fs = require('fs'),
     shell = require('shelljs'),
     events = require('cordova-common').events,
-    cordova = require('../src/cordova/cordova'),
-    rewire = require('rewire'),
-    prepare = require('../src/cordova/prepare'),
-    platforms = require('../src/platforms/platforms'),
-    cordova_util = require('util'),
     ConfigParser = require('cordova-common').ConfigParser,
-    platform = rewire('../src/cordova/platform.js');
-
-var projectRoot = 'C:\\Projects\\cordova-projects\\move-tracker';
-var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
+    cordova = require('../src/cordova/cordova');
 
 /** Testing will check if "cordova prepare" is restoring platforms and plugins as expected.
 *   Uses different basePkgJson files depending on testing expecations of what (platforms/plugins/variables)
 *   should initially be in pkg.json and/or config.xml.
 */
 
-var req = function(someModule) {
-    delete require.cache[require.resolve(someModule)];
-    return require(someModule);
-}
 // Use basePkgJson
 describe('platform end-to-end with --save', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson');
@@ -58,7 +45,6 @@ describe('platform end-to-end with --save', function () {
     });
 
     afterEach(function() {
-        var cwd = process.cwd();
         delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
@@ -292,7 +278,6 @@ describe('files should not be modified if their platforms are identical', functi
     });
 
     afterEach(function() {
-        var cwd = process.cwd();
         delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
@@ -306,15 +291,6 @@ describe('files should not be modified if their platforms are identical', functi
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
         });
     }
-
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        });
-    }
-    
     /** Test#004 will check the platform list in package.json and config.xml. 
     *   When both files contain the same platforms and cordova prepare is run, 
     *   neither file is modified.
@@ -326,7 +302,6 @@ describe('files should not be modified if their platforms are identical', functi
         var engines = cfg1.getEngines();
         var pkgJsonPath = path.join(cwd,'package.json');
         var pkgJson;
-        var platformsFolderPath;
         var engNames = engines.map(function(elem) {
             return elem.name;
         });
@@ -374,7 +349,6 @@ describe('update pkg.json to include platforms in config.xml', function () {
     });
 
     afterEach(function() {
-        var cwd = process.cwd();
         delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
@@ -386,14 +360,6 @@ describe('update pkg.json to include platforms in config.xml', function () {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
-        });
-    }
-
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
         });
     }
     /** Test#005 will check the platform list in package.json and config.xml. 
@@ -408,7 +374,6 @@ describe('update pkg.json to include platforms in config.xml', function () {
         var pkgJsonPath = path.join(cwd,'package.json');
         delete require.cache[require.resolve(pkgJsonPath)];
         var pkgJson = require(pkgJsonPath);
-        var platformsFolderPath;
         var engNames = engines.map(function(elem) {
             return elem.name;
         });
@@ -459,7 +424,6 @@ describe('update empty package.json to match config.xml', function () {
     });
 
     afterEach(function() {
-        var cwd = process.cwd();
         delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
@@ -471,14 +435,6 @@ describe('update empty package.json to match config.xml', function () {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
-        });
-    }
-
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
         });
     }
     /** Test#006 will check if pkg.json has a cordova key and platforms installed already.
@@ -493,7 +449,6 @@ describe('update empty package.json to match config.xml', function () {
         var cfg1 = new ConfigParser(configXmlPath);
         var engines = cfg1.getEngines();
         var pkgJson = require(pkgJsonPath);
-        var platformsFolderPath;
         var engNames = engines.map(function(elem) {
             return elem.name;
         });
@@ -548,7 +503,6 @@ describe('update config.xml to include platforms in pkg.json', function () {
     });
 
     afterEach(function() {
-        var cwd = process.cwd();
         delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
@@ -560,14 +514,6 @@ describe('update config.xml to include platforms in pkg.json', function () {
             var installed = results.match(/Installed platforms:\n  (.*)/);
             expect(installed).toBeDefined();
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
-        });
-    }
-
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
         });
     }
     /** Test#007 will check the platform list in package.json and config.xml. 
@@ -582,7 +528,6 @@ describe('update config.xml to include platforms in pkg.json', function () {
         var pkgJsonPath = path.join(cwd,'package.json');
         delete require.cache[require.resolve(pkgJsonPath)];
         var pkgJson = require(pkgJsonPath);
-        var platformsFolderPath;
         var engNames = engines.map(function(elem) {
             return elem.name;
         });
@@ -638,7 +583,6 @@ describe('update config.xml to use the variable found in pkg.json', function () 
     });
 
     afterEach(function() {
-        var cwd = process.cwd();
         delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
@@ -652,15 +596,6 @@ describe('update config.xml to use the variable found in pkg.json', function () 
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
         });
     }
-
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        });
-    }
-
     /** Test#011 will check the plugin/variable list in package.json and config.xml. 
     *   When pkg.json and config.xml have the same variables, but different values,
     *   pkg.json should win and that value will be used and replaces config's value.
@@ -729,7 +664,6 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
     });
 
     afterEach(function() {
-        var cwd = process.cwd();
         delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
@@ -743,15 +677,6 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
         });
     }
-
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        });
-    }
-
     /** Test#012 will check the plugin/variable list in package.json and config.xml. 
     *   When config.xml has a 'camera plugin and 1 variable' and pkg.json has 1 plugins/0 variables,
     *   cordova prepare runs and will update pkg.json to match config.xml's plugins/variables.
@@ -822,7 +747,6 @@ describe('update pkg.json AND config.xml to include all plugins and merge variab
     });
 
     afterEach(function() {
-        var cwd = process.cwd();
         delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
@@ -836,15 +760,6 @@ describe('update pkg.json AND config.xml to include all plugins and merge variab
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
         });
     }
-
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        });
-    }
-
     /** Test#013 will check the plugin/variable list in package.json and config.xml. 
     *   For plugins that are the same, it will merge their variables together for the final list.
     *   Plugins that are unique to that file, will be copied over to the file that is missing it.
@@ -951,7 +866,6 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
     });
 
     afterEach(function() {
-        var cwd = process.cwd();
         delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
@@ -965,15 +879,6 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
         });
     }
-
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        });
-    }
-
     /** Test#014 will check the plugin/variable list in package.json and config.xml. 
     *   If either file is missing a plugin, it will be added with the correct variables.
     *   If there is a matching plugin name, the variables will be merged and then added
@@ -1086,7 +991,6 @@ describe('update config.xml to include the plugin that is in pkg.json', function
     });
 
     afterEach(function() {
-        var cwd = process.cwd();
         delete require.cache[require.resolve(path.join(process.cwd(),'package.json'))];
         process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
         shell.rm('-rf', tmpDir);
@@ -1100,15 +1004,6 @@ describe('update config.xml to include the plugin that is in pkg.json', function
             expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
         });
     }
-
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        });
-    }
-
     /** Test#015 will check the plugin/variable list in package.json and config.xml. 
     *   When config has 0 plugins, it will get updated with the plugins from
     *   pkg.json.
@@ -1123,7 +1018,6 @@ describe('update config.xml to include the plugin that is in pkg.json', function
         var pkgJson = require(pkgJsonPath);
         var configPlugin;
         var configPluginVariables;
-
         // Config.xml is initially empty and has no plugins
         expect(Object.keys(configPlugins).length === 0);
         // Expect that pkg.json exists with 1 plugin
