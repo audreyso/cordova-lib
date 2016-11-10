@@ -30,7 +30,6 @@ var cordova_util = require('./util'),
 exports.installPluginsFromConfigXML = installPluginsFromConfigXML;
 exports.installPlatformsFromConfigXML = installPlatformsFromConfigXML;
 
-
 function installPlatformsFromConfigXML(platforms, opts) {
     events.emit('verbose', 'Checking config.xml and package.json for saved platforms that haven\'t been added to the project');
 
@@ -40,172 +39,123 @@ function installPlatformsFromConfigXML(platforms, opts) {
     var engines = cfg.getEngines();
     var pkgJsonPath = path.join(projectHome,'package.json');
     var pkgJson;
-    var targetsPkgJson;
-    var comboArray; 
+    var pkgJsonPlatforms;
+    var comboArray = []; 
     var targets;
-    var targetsConfig;
-    var engines;
+    var configPlatforms = [];
     var installAllPlatforms;
     var platformPath;
     var platformAlreadyAdded;
     var t;
-    var ConfigAndPkgJsonArray = [];
+    // var ConfigAndPkgJsonArray = [];
     var modifiedPkgJson = false;
     var modifiedConfigXML = false;
-    var modifiedPkgJsonPlugin = false;
-    var modifiedConfigXMLPlugin = false;
-    var targetPlatformsArray = [];
+    // var targetPlatformsArray = [];
 
     if(fs.existsSync(pkgJsonPath)) {
         pkgJson = require(pkgJsonPath);
     }
     if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.platforms !== undefined) {
-        targetsPkgJson = pkgJson.cordova.platforms;
+        pkgJsonPlatforms = pkgJson.cordova.platforms;
     } 
-
+    
     if(cfg !== undefined) {
-        targetsConfig = [];
+        //this is useless 64-80
+        /*
+        configPlatforms = [];
         engines = cfg.getEngines(projectHome);
         installAllPlatforms = !platforms || platforms.length === 0;
-
         targets = engines.map(function(engine) {
             platformPath = path.join(projectHome, 'platforms', engine.name);
             platformAlreadyAdded = fs.existsSync(platformPath);
-
             // If no platforms are specified we add all.
             if ((installAllPlatforms || platforms.indexOf(engine.name) > -1) && !platformAlreadyAdded) {
                 t = engine.name;
                 if (engine.spec) {
                     //t += '@' + engine.spec;
-                    targetsConfig.push(t);
+                    configPlatforms.push(t);
                 }
                 return t;
             }
-        });
+        });*/
 
-            if (targetsPkgJson !== undefined) {
-                // Combining arrays and checking duplicates
-                comboArray = targetsPkgJson.slice();
-            } else {
-                comboArray = [];
+        if (pkgJsonPlatforms !== undefined) {
+            // Combining arrays and checking duplicates
+            comboArray = pkgJsonPlatforms.slice();
+        }
+        
+        engines = cfg.getEngines(projectHome)
+        configPlatforms = engines.map(function(Engine) {
+            t = Engine.name;
+            return t;
+        });
+        
+        configPlatforms.forEach(function(item) {
+            if(comboArray.indexOf(item) < 0 ) {
+                comboArray.push(item);
             }
-            targetsConfig.forEach(function(item) {
-                if(comboArray.indexOf(item) < 0 ) {
-                    comboArray.push(item);
-                }
-            });
+        });
+        //comboArray should have all platforms from config.xml & package.json
+        //remove dupes in comboArray & sort
+        var uniq = comboArray.reduce(function(a,b) {
+            if (a.indexOf(b) < 0 ) a.push(b);
+                return a;
+        },[]);
+        comboArray = uniq;
+        comboArray = comboArray.sort();
+
+        // No platforms to restore from either config.xml or package.json
+        if (comboArray.length <= 0) {
+           return Q('No platforms found in config.xml or package.json. Nothing to restore');
+        }
+
+        //if no package.json, don't bother
+        if (pkgJson !== undefined) { 
             // If config.xml & pkgJson exist and the cordova key is undefined, create a cordova key.
-            if (cfg !== undefined && pkgJson !== undefined && pkgJson.cordova === undefined) {
+            if (pkgJson.cordova === undefined) {
                 pkgJson.cordova = {};
             }
             // If there is no platforms array, create an empty one.
             if (pkgJson.cordova.platforms === undefined) {
                 pkgJson.cordova.platforms = [];
-                // Get a list of platforms names from config.xml.
-                targetPlatformsArray = engines.map(function(mEngine) {
-                    t = mEngine.name;
-                    return t;
-                }); 
-
-                var uniq = targetPlatformsArray.reduce(function(a,b){
-                    if (a.indexOf(b) < 0 ) a.push(b);
-                    return a;
-                },[]);
-                targetPlatformsArray = uniq;
-
-                // Add the platforms from config.xml to package.json
-                pkgJson.cordova.platforms = targetPlatformsArray;
-                modifiedPkgJson = true;
-                //fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
             }
-
-        if (!targets || !targets.length) {
-           return Q('No platforms found in config.xml that haven\'t been added to the project');
-        }
-            // If config.xml and pkg.json exist and both already contain platforms, run cordova prepare
-            // so that both files are identical
-            if(cfg !== undefined && targetsConfig !== undefined && pkgJson.cordova.platforms !== undefined) {
-                
-                targetsConfig = engines.map(function(mEngine) {
-                    t = mEngine.name;
-                    //targetsConfig.push(t);
-                    return t;
-                });
-
-                var uniq = targetsConfig.reduce(function(a,b){
-                    if (a.indexOf(b) < 0 ) a.push(b);
-                    return a;
-                },[]);
-                targetsConfig = uniq;
-            }
-            if (pkgJson.cordova.platforms !== undefined) {
-                // Create a new array based on cordova.platforms
-                pkgJson.cordova.platforms.forEach(function(item) {
-                    if (ConfigAndPkgJsonArray.indexOf(item) < 0 ) 
-                        ConfigAndPkgJsonArray.push(item);
-                });
-            }
-            targetsConfig.forEach(function(item) {
-                if(ConfigAndPkgJsonArray.indexOf(item) < 0 ) {
-                    ConfigAndPkgJsonArray.push(item);
-                }
-            });
-
-            //sort the arrays alphabetically 
-            ConfigAndPkgJsonArray = ConfigAndPkgJsonArray.sort();
-            pkgJson.cordova.platforms = pkgJson.cordova.platforms.sort();
-
-            // Get list of engine names and create a new array of engines from config.xml.
-            var engNames = engines.map(function(elem) {
-                return elem.name;
-            });
-            var configEngArray = engNames.sort().slice();
-
-            // If ConfigAndPkgJson array has the same platforms as pkg.json, no modification to pkg.json.
-            if(ConfigAndPkgJsonArray.toString() === pkgJson.cordova.platforms.toString()) {
+            // If comboArray has the same platforms as pkg.json, no modification to pkg.json.
+            if (comboArray.toString() === pkgJson.cordova.platforms.sort().toString()) {
                 events.emit('verbose', 'Config.xml and package.json platforms are the same. No pkg.json modification.');
-            }
-            // If ConfigAndPkgJson array has the same platforms as config.xml, no modification to config.xml.
-            if(ConfigAndPkgJsonArray.toString() === configEngArray.toString()) {
-                events.emit('verbose', 'Package.json and config.xml are the same. No config.xml modification.');
-            }
-            // If ConfigAndPkgJson array do not have the same platforms, modify pkg.json to include the elements
-            // from the ConfigAndPkgJson array so that the arrays are identical
-            if(ConfigAndPkgJsonArray.toString() !== pkgJson.cordova.platforms.toString()) {
-                events.emit('verbose', 'Config.xml and package.json platforms are not the same. Updating package.json with most current list of platforms.');
-                ConfigAndPkgJsonArray.forEach(function(item) {
-                    if(pkgJson.cordova.platforms.indexOf(item) < 0 ) {
-                        pkgJson.cordova.platforms.push(item);
-                        modifiedPkgJson = true;
-                    }
-                });
-            }
-            // If ConfigAndPkgJson array do not have the same platforms, modify config.xml to include the elements
-            // from the ConfigAndPkgJson array so that the arrays are identical
-            if(ConfigAndPkgJsonArray.toString() !== configEngArray.toString()) {
-                events.emit('verbose', 'Package.json and config.xml platforms are not the same. Updating config.xml with most current list of platforms.');
-                ConfigAndPkgJsonArray.forEach(function(item) {
-                    if(configEngArray.indexOf(item) < 0 ) {
-                        configEngArray.push(item);
-                        modifiedConfigXML = true;
-                        cfg.addEngine(item);
-                    }
-                });
-            }
-            // Write and update pkg.json if it has been modified.
-            if (modifiedPkgJson === true) {
-                //sort then write
-                pkgJson.cordova.platforms = pkgJson.cordova.platforms.sort();
-                fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
-            }
-            if (modifiedConfigXML === true) {
-                cfg.write();
+            } else {
+                // modify pkg.json to include the elements
+                // from the comboArray array so that the arrays are identical
+                events.emit('verbose', 'Config.xml and package.json platforms are different. Updating package.json with most current list of platforms.');
+                modifiedPkgJson = true;
             }
 
+            // If comboArray has the same platforms as config.xml, no modification to config.xml.
+            if(comboArray.length === configPlatforms.length && comboArray.toString() === configPlatforms.sort().toString()) {
+                events.emit('verbose', 'Package.json and config.xml are the same. No config.xml modification.');
+            } else {
+                events.emit('verbose', 'Package.json and config.xml platforms are different. Updating config.xml with most current list of platforms.');
+                comboArray.forEach(function(item) {
+                    if(configPlatforms.indexOf(item) < 0 ) {
+                        cfg.addEngine(item);
+                        modifiedConfigXML = true;
+                    }
+                });
+            }
+        }
+
+
+        // Write and update pkg.json if it has been modified.
+        if (modifiedPkgJson === true) {
+            pkgJson.cordova.platforms = comboArray;
+            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+        }
+        if (modifiedConfigXML === true) {
+            configPlatforms = comboArray;
+            cfg.write();
+        }
         if (!comboArray || !comboArray.length) {
             return Q('No platforms found in config.xml and/or package.json that haven\'t been added to the project');
         }
-
     }
     // Run `platform add` for all the platforms separately
     // so that failure on one does not affect the other.
@@ -234,7 +184,7 @@ function installPluginsFromConfigXML(args) {
     var plugins_dir = path.join(projectRoot, 'plugins');
     var pkgJsonPath = path.join(projectRoot,'package.json');
     var pkgJson;
-    var pkgJsonArray = [];
+    var pkgJsonPluginIdArray = [];
     var comboPluginArray;
 
     // Get all configured plugins
@@ -253,8 +203,9 @@ function installPluginsFromConfigXML(args) {
     pkgJson.cordova.plugins === undefined) {
         pkgJson.cordova.plugins = {};
         pluginIdConfig.forEach(function(foo) {
-            pkgJson.cordova.plugins[foo] = {}
+            pkgJson.cordova.plugins[foo] = {};
         });
+        console.log('writing 3')
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
     }
     // (In pkg.json), if there is no platforms array and no plugins array, create a new plugins array
@@ -264,57 +215,62 @@ function installPluginsFromConfigXML(args) {
         pkgJson.cordova.platforms = [];
         pkgJson.cordova.plugins = {};
         pluginIdConfig.forEach(function(foo) {
-            pkgJson.cordova.plugins[foo] = {}
+            pkgJson.cordova.plugins[foo] = {};
         });
+        console.log('writing 4')
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
     }
 
-    pkgJsonArray = Object.keys(pkgJson.cordova.plugins);
+    pkgJsonPluginIdArray = Object.keys(pkgJson.cordova.plugins);
 
-    var pluginNames = pluginIdConfig.map(function(elem) {
-        return elem.name;
-    });
+    // audrey delete?
+    // var pluginNames = pluginIdConfig.map(function(elem) {
+    //     return elem.name;
+    // });
 
     // Create a merged plugin data array (mergedPluginDataObj)
     // and add all of the package.json plugins to mergedPluginDataObj
     var mergedPluginDataObj = pkgJson.cordova.plugins;
-    var mergedPluginDataArray = pkgJsonArray;
+    // Audrey
+    // var mergedPluginDataArray = pkgJsonPluginIdArray;
 
     // Check to see which plugins are initially the same in pkg.json and config.xml
     // Merge identical plugins and their variables together first
-    for (var i = 0; i < mergedPluginDataArray.length; i++) {
-        if(pluginIdConfig.includes(mergedPluginDataArray[i])) {
-            var configPlugin = cfg.getPlugin(mergedPluginDataArray[i]);
+    for (var i = 0; i < pkgJsonPluginIdArray.length; i++) {
+        if(pluginIdConfig.includes(pkgJsonPluginIdArray[i])) {
+            var configPlugin = cfg.getPlugin(pkgJsonPluginIdArray[i]);
             var configPluginVariables = configPlugin.variables;
-            var pkgJsonPluginVariables = mergedPluginDataObj[mergedPluginDataArray[i]];
+            var pkgJsonPluginVariables = mergedPluginDataObj[pkgJsonPluginIdArray[i]];
             for(var key in configPluginVariables) {
                 // Handle conflicts, package.json wins
                 if(pkgJsonPluginVariables[key] === undefined) {
                     pkgJsonPluginVariables[key] = configPluginVariables[key];
-                    mergedPluginDataObj[mergedPluginDataArray[i]][key] = configPluginVariables[key];
+                    mergedPluginDataObj[pkgJsonPluginIdArray[i]][key] = configPluginVariables[key];
                 }
             }
         }
     }
     // Check to see if pkg.json plugin(id) and config plugin(id) match
-    if(mergedPluginDataArray.sort().toString() !== pluginIdConfig.sort().toString() || pluginIdConfig === []) {
+    if(pkgJsonPluginIdArray.sort().toString() !== pluginIdConfig.sort().toString() || pluginIdConfig === []) {
         // If there is a config plugin that does NOT already exist in
         // mergedPluginDataArray, add it and its variables
         pluginIdConfig.forEach(function(item) {
-            if(mergedPluginDataArray.indexOf(item) < 0) {
-                mergedPluginDataArray.push(item);
+            if(pkgJsonPluginIdArray.indexOf(item) < 0) {
+                pkgJsonPluginIdArray.push(item);
                 var configXMLPlugin = cfg.getPlugin(item);
                 mergedPluginDataObj[item] = configXMLPlugin.variables;
             }
         });
     }
     // Write to pkg.Json
-    // TODO: toString comparision to see if they are the same and then write
     pkgJson.cordova.plugins = mergedPluginDataObj;
+    // Audrey... Do I need to check anything before writing?
+    // TODO: toString comparision to see if they have the same plugins/variables
+    console.log('writing 5')
     fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
-
+    
     // Write config.xml
-    mergedPluginDataArray.forEach(function(plugID) {
+    pkgJsonPluginIdArray.forEach(function(plugID) {
         cfg.removePlugin(plugID);
         cfg.addPlugin({name:plugID}, mergedPluginDataObj[plugID]); 
     });
@@ -323,15 +279,13 @@ function installPluginsFromConfigXML(args) {
     // If config.xml and pkg.json exist and both already contain plugins, run cordova prepare
     // to check if these plugins are identical.
     if(cfg !== undefined && pkgJson.cordova.plugins !== undefined) {
-        if(pkgJsonArray.toString() === pluginIdConfig.toString() && pkgJsonArray.length === pluginIdConfig.length) {
+        if(pkgJsonPluginIdArray.toString() === pluginIdConfig.toString() && pkgJsonPluginIdArray.length === pluginIdConfig.length) {
             events.emit('verbose', 'Config.xml and pkgJson plugins are the same. No pkg.json or config.xml modification.');
         }
-
-        if(pkgJsonArray.toString() !== pluginIdConfig.toString() || pkgJsonArray.length !== pluginIdConfig.length) {
+        if(pkgJsonPluginIdArray.toString() !== pluginIdConfig.toString() || pkgJsonPluginIdArray.length !== pluginIdConfig.length) {
            events.emit('verbose', 'Config.xml and pkgJson plugin names are different.');
             // Combining arrays and checking duplicates
-
-            comboPluginArray = pkgJsonArray.slice();
+            comboPluginArray = pkgJsonPluginIdArray.slice();
             pluginIdConfig.forEach(function(item) {
                 if(comboPluginArray.indexOf(item) < 0) {
                     comboPluginArray.push(item);

@@ -18,47 +18,10 @@
 */
 var helpers = require('./helpers'),
     path = require('path'),
-    fs = require('fs'),
     shell = require('shelljs'),
-    superspawn = require('cordova-common').superspawn,
-    Q = require('q'),
     events = require('cordova-common').events,
-    cordova = require('../src/cordova/cordova'),
-    rewire = require('rewire'),
-    prepare = require('../src/cordova/prepare'),
-    platforms = require('../src/platforms/platforms'),
-    platform = rewire('../src/cordova/platform.js');
+    cordova = require('../src/cordova/cordova');
 
-var projectRoot = 'C:\\Projects\\cordova-projects\\move-tracker';
-var pluginsDir = path.join(__dirname, 'fixtures', 'plugins');
-
-function addPlugin(target, id, options) {
-    // Checks that there are no plugins yet.
-    return cordova.raw.plugin('list').then(function() {
-        expect(results).toMatch(/No plugins added/gi);
-    }).then(function() {
-        // Adds a fake plugin from fixtures.
-        return cordova.raw.plugin('add', target, options);
-    }).then(function() {
-        expect(path.join(project, 'plugins', id, 'plugin.xml')).toExist();
-    }).then(function() {
-        return cordova.raw.plugin('ls');
-    }).then(function() {
-        expect(results).toContain(id);
-    });
-}
-// Runs: remove, list.
-function removePlugin(id, options) {
-    return cordova.raw.plugin('rm', id)
-    .then(function() {
-        // The whole dir should be gone.
-        expect(path.join(project, 'plugins', id)).not.toExist();
-    }).then(function() {
-        return cordova.raw.plugin('ls');
-    }).then(function() {
-        expect(results).toMatch(/No plugins added/gi);
-    });
-}
 // This group of tests checks if plugins are added and removed as expected from package.json.
 describe('plugin end-to-end', function() {
     var pluginId = 'cordova-plugin-device';
@@ -347,7 +310,7 @@ describe('platform end-to-end with --save', function () {
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             // Platform list should be empty and helpers.testPlatform should NOT have been added.
-            expect(pkgJson.cordova).toBeUndefined();
+            expect(pkgJson.cordova.platforms.length).toEqual(0);
         }).then(fullPlatformList)
         .fail(function(err) {
             expect(err).toBeUndefined();
