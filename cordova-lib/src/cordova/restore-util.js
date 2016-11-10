@@ -47,10 +47,8 @@ function installPlatformsFromConfigXML(platforms, opts) {
     var platformPath;
     var platformAlreadyAdded;
     var t;
-    // var ConfigAndPkgJsonArray = [];
     var modifiedPkgJson = false;
     var modifiedConfigXML = false;
-    // var targetPlatformsArray = [];
 
     if(fs.existsSync(pkgJsonPath)) {
         pkgJson = require(pkgJsonPath);
@@ -60,24 +58,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
     } 
     
     if(cfg !== undefined) {
-        //this is useless 64-80
-        /*
-        configPlatforms = [];
-        engines = cfg.getEngines(projectHome);
-        installAllPlatforms = !platforms || platforms.length === 0;
-        targets = engines.map(function(engine) {
-            platformPath = path.join(projectHome, 'platforms', engine.name);
-            platformAlreadyAdded = fs.existsSync(platformPath);
-            // If no platforms are specified we add all.
-            if ((installAllPlatforms || platforms.indexOf(engine.name) > -1) && !platformAlreadyAdded) {
-                t = engine.name;
-                if (engine.spec) {
-                    //t += '@' + engine.spec;
-                    configPlatforms.push(t);
-                }
-                return t;
-            }
-        });*/
 
         if (pkgJsonPlatforms !== undefined) {
             // Combining arrays and checking duplicates
@@ -142,8 +122,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
                 });
             }
         }
-
-
         // Write and update pkg.json if it has been modified.
         if (modifiedPkgJson === true) {
             pkgJson.cordova.platforms = comboArray;
@@ -205,7 +183,6 @@ function installPluginsFromConfigXML(args) {
         pluginIdConfig.forEach(function(foo) {
             pkgJson.cordova.plugins[foo] = {};
         });
-        console.log('writing 3')
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
     }
     // (In pkg.json), if there is no platforms array and no plugins array, create a new plugins array
@@ -217,22 +194,14 @@ function installPluginsFromConfigXML(args) {
         pluginIdConfig.forEach(function(foo) {
             pkgJson.cordova.plugins[foo] = {};
         });
-        console.log('writing 4')
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
     }
 
     pkgJsonPluginIdArray = Object.keys(pkgJson.cordova.plugins);
 
-    // audrey delete?
-    // var pluginNames = pluginIdConfig.map(function(elem) {
-    //     return elem.name;
-    // });
-
     // Create a merged plugin data array (mergedPluginDataObj)
     // and add all of the package.json plugins to mergedPluginDataObj
     var mergedPluginDataObj = pkgJson.cordova.plugins;
-    // Audrey
-    // var mergedPluginDataArray = pkgJsonPluginIdArray;
 
     // Check to see which plugins are initially the same in pkg.json and config.xml
     // Merge identical plugins and their variables together first
@@ -264,9 +233,6 @@ function installPluginsFromConfigXML(args) {
     }
     // Write to pkg.Json
     pkgJson.cordova.plugins = mergedPluginDataObj;
-    // Audrey... Do I need to check anything before writing?
-    // TODO: toString comparision to see if they have the same plugins/variables
-    console.log('writing 5')
     fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
     
     // Write config.xml
