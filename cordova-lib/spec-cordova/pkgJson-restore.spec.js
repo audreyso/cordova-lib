@@ -610,6 +610,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
         var configPlugin = cfg1.getPlugin(configPlugins);
         var configPluginVariables = configPlugin.variables;
         var pkgJson = require(pkgJsonPath);
+        var pluginsFolderPath = path.join(cwd,'plugins');
 
         // Expect that pkg.json exists with 1 plugin, 1 variable, and a different value (json)
         expect(pkgJson.cordova.plugins).toBeDefined();
@@ -625,7 +626,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
             // Run cordova prepare
             return cordova.raw.prepare();
         }).then(function() {
-            // // Delete any previous caches of require(package.json)
+            // Delete any previous caches of require(package.json)
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             var cfg2 = new ConfigParser(configXmlPath);
@@ -640,6 +641,8 @@ describe('update config.xml to use the variable found in pkg.json', function () 
             expect(configPlugin.name).toEqual('cordova-plugin-camera');
             expect(configPluginVariables).toEqual({ variable_1: 'json' });
             expect(Object.keys(configPlugin).length === 1);
+            // Expect that the camera plugin is restored.
+            expect(path.join(pluginsFolderPath, 'cordova-plugin-camera')).toExist();
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -691,6 +694,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
         var configPlugin = cfg1.getPlugin(configPlugins);
         var configPluginVariables = configPlugin.variables;
         var pkgJson = require(pkgJsonPath);
+        var pluginsFolderPath12 = path.join(cwd,'plugins');
 
         // Expect that pkg.json exists with 1 plugin
         expect(pkgJson.cordova.plugins).toBeDefined();
@@ -722,6 +726,8 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
             expect(configPlugin.name).toEqual('cordova-plugin-camera');
             expect(configPluginVariables).toEqual({ variable_1: 'value_1' });
             expect(Object.keys(configPlugin).length === 1);
+            //Expect camera to be restored and in the installed plugin list.
+            expect(path.join(pluginsFolderPath12, 'cordova-plugin-camera')).toExist();
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -775,6 +781,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge variab
         var pkgJson = require(pkgJsonPath);
         var configPlugin;
         var configPluginVariables;
+        var pluginsFolderPath13 = path.join(cwd,'plugins');
 
         // Config.xml has 2 plugins and does not have device yet
         expect(Object.keys(configPlugins).length === 2);
@@ -841,6 +848,10 @@ describe('update pkg.json AND config.xml to include all plugins and merge variab
             expect(configPlugins.indexOf('cordova-plugin-camera')).toEqual(0);
             expect(configPlugins.indexOf('cordova-plugin-device')).toEqual(1);
             expect(configPlugins.indexOf('cordova-plugin-splashscreen')).toEqual(2);
+            // Expect all plugins to be restored
+            expect(path.join(pluginsFolderPath13, 'cordova-plugin-device')).toExist();
+            expect(path.join(pluginsFolderPath13, 'cordova-plugin-camera')).toExist();
+            expect(path.join(pluginsFolderPath13, 'cordova-plugin-splashscreen')).toExist();
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -894,6 +905,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
         var pkgJson = require(pkgJsonPath);
         var configPlugin;
         var configPluginVariables;
+        var pluginsFolderPath14 = path.join(cwd,'plugins');
 
         // Config.xml initially has the camera and device plugin and NO splashscreen
         expect(Object.keys(configPlugins).length === 2);
@@ -967,6 +979,10 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
             // from pkg.json to the camera plugin
             expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toEqual({ variable_1: 'value_1',
             variable_3: 'value_3', variable_2: 'value_2' });
+            // Expect that all 3 plugins are restored and in the installed list.
+            expect(path.join(pluginsFolderPath14, 'cordova-plugin-camera')).toExist();
+            expect(path.join(pluginsFolderPath14, 'cordova-plugin-splashscreen')).toExist();
+            expect(path.join(pluginsFolderPath14, 'cordova-plugin-device')).toExist();
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -1018,6 +1034,8 @@ describe('update config.xml to include the plugin that is in pkg.json', function
         var pkgJson = require(pkgJsonPath);
         var configPlugin;
         var configPluginVariables;
+        var pluginsFolderPath15 = path.join(cwd,'plugins');
+
         // Config.xml is initially empty and has no plugins
         expect(Object.keys(configPlugins).length === 0);
         // Expect that pkg.json exists with 1 plugin
@@ -1053,11 +1071,158 @@ describe('update config.xml to include the plugin that is in pkg.json', function
             expect(Object.keys(pkgJson.cordova.plugins).length === 1);
             expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toBeDefined();
             expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toEqual({ variable_1: 'value_1' });
+            // Check if the plugin is in the installed list.
+            expect(path.join(pluginsFolderPath15, 'cordova-plugin-camera')).toExist();
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
     },30000);
+});
+
+// Use basePkgJson13 - does NOT have a package.json
+describe('platforms and plugins should be restored with config.xml even without a pkg.json', function () {
+    var tmpDir = helpers.tmpDir('platform_test_pkgjson');
+    var project = path.join(tmpDir, 'project');
+    var results;
+
+    beforeEach(function() {
+        shell.rm('-rf', tmpDir);
+        // Copy then move because we need to copy everything, but that means it will copy the whole directory.
+        // Using /* doesn't work because of hidden files.
+        // Use basePkgJson6 because pkg.json and config.xml contain only android
+        shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson13'), tmpDir);
+        shell.mv(path.join(tmpDir, 'basePkgJson13'), project);
+        process.chdir(project);
+        events.on('results', function(res) { results = res; });
+    });
+
+    afterEach(function() {
+        process.chdir(path.join(__dirname, '..'));  // Needed to rm the dir on Windows.
+        shell.rm('-rf', tmpDir);
+    });
+
+    // Factoring out some repeated checks.
+    function emptyPlatformList() {
+        return cordova.raw.platform('list').then(function() {
+            var installed = results.match(/Installed platforms:\n  (.*)/);
+            expect(installed).toBeDefined();
+            expect(installed[1].indexOf(helpers.testPlatform)).toBe(-1);
+        });
+    }
+    /** Test#016 will check that cordova prepare will still restore the correct
+    *   platforms and plugins even without package.json file.
+    */
+    it('Test#016 : platforms and plugins should be restored with config.xml even without a pkg.json', function(done) {
+        var cwd = process.cwd();
+        var configXmlPath = path.join(cwd, 'config.xml');
+        var cfg1 = new ConfigParser(configXmlPath);
+        var engines = cfg1.getEngines();
+        var engNames = engines.map(function(elem) {
+            return elem.name;
+        });
+        var configEngArray = engNames.slice();
+        var configPlugins = cfg1.getPluginIdList();
+        var platformsFolderPath1 = path.join(cwd,'platforms/platforms.json');
+        var pluginsFolderPath16 = path.join(cwd,'plugins');
+        var platformsJson;
+        var androidPlatform = 'android';
+        var iosPlatform = 'ios';
+
+        // Pkg.json does not exist
+        expect(path.join(cwd,'package.json')).not.toExist();
+        // Config.xml contains only contains 'ios' at this point (basePkgJson13)
+        expect(configEngArray.length === 1);
+        // Config.xml contains only 1 plugin at this point
+        expect(Object.keys(configPlugins).length === 1);
+
+        emptyPlatformList().then(function() {
+        // Run cordova prepare
+        return cordova.raw.platform('add', iosPlatform, {'save':true});
+        }).then(function () {
+        // android and ios are in config.xml
+        var cfg3 = new ConfigParser(configXmlPath);
+        engines = cfg3.getEngines();
+        engNames = engines.map(function(elem) {
+            return elem.name;
+        });
+        configEngArray = engNames.slice();
+        expect(configEngArray.length === 2);
+
+        delete require.cache[require.resolve(platformsFolderPath1)];
+        platformsJson = require(platformsFolderPath1);
+        // android and ios should be installed
+        expect(platformsJson).toBeDefined();
+        expect(platformsJson[androidPlatform]).toBeDefined();
+        expect(platformsJson[iosPlatform]).toBeDefined();
+
+        // Remove android without save
+        return cordova.raw.platform('rm', [iosPlatform]);
+        }).then(function () {
+        // Android should not be in the installed list (only ios)
+        delete require.cache[require.resolve(platformsFolderPath1)];
+        platformsJson = require(platformsFolderPath1);
+        expect(platformsJson).toBeDefined();
+        expect(platformsJson[iosPlatform]).toBeUndefined();
+        expect(platformsJson[androidPlatform]).toBeDefined();
+        // Run cordova prepare
+        }).then(function () {
+        return cordova.raw.prepare();
+        // left off here
+        }).then(function() {
+        var cfg2 = new ConfigParser(configXmlPath);
+        engines = cfg2.getEngines();
+        engNames = engines.map(function(elem) {
+            return elem.name;
+        });
+        configEngArray = engNames.slice();
+        // Config.xml should have android and ios.
+        expect(configEngArray.indexOf(androidPlatform)).toBeGreaterThan(-1);
+        expect(configEngArray.indexOf(iosPlatform)).toBeGreaterThan(-1);
+        expect(configEngArray.length === 2);
+        // Expect that android and ios were restored
+        delete require.cache[require.resolve(platformsFolderPath1)];
+        platformsJson = require(platformsFolderPath1);
+        expect(platformsJson[androidPlatform]).toBeDefined();
+        expect(platformsJson[iosPlatform]).toBeDefined();
+        //Check plugins
+        }).then(function () {
+            var cfg5 = new ConfigParser(configXmlPath);
+            engines = cfg5.getEngines();
+            engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            configEngArray = engNames.slice();
+            // Config.xml contains only one plugin
+            expect(Object.keys(configPlugins).length === 1);
+            expect(configPlugins.indexOf('cordova-plugin-device')).toEqual(0);
+            // Expect plugin to be in the installed list
+            expect(path.join(pluginsFolderPath16, 'cordova-plugin-device')).toExist();
+        }).then(function () {
+            // Remove plugin without save
+            return cordova.raw.plugin('rm', 'cordova-plugin-device');
+        }).then(function () {
+            var cfg4 = new ConfigParser(configXmlPath);
+            engines = cfg4.getEngines();
+            engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            configEngArray = engNames.slice();
+            // Config.xml plugins are the same
+            expect(Object.keys(configPlugins).length === 1);
+            expect(configPlugins.indexOf('cordova-plugin-device')).toEqual(0);
+            // Plugin should be removed from the installed list
+            expect(path.join(pluginsFolderPath16, 'cordova-plugin-device')).not.toExist();
+        }).then(function () {
+            return cordova.raw.prepare();
+        }).then(function () {
+        //  Plugin should be restored and returned to the installed list
+            expect(path.join(pluginsFolderPath16, 'cordova-plugin-device')).toExist();
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    // Cordova prepare needs extra wait time to complete.
+    },60000);
 });
 
 
