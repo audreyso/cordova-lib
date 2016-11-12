@@ -41,15 +41,9 @@ function installPlatformsFromConfigXML(platforms, opts) {
     var pkgJson;
     var pkgJsonPlatforms;
     var comboArray = []; 
-    var targets;
     var configPlatforms = [];
-    var installAllPlatforms;
-    var platformPath;
-    var platformAlreadyAdded;
-    var t;
     var modifiedPkgJson = false;
     var modifiedConfigXML = false;
-    var configObject;
 
     if(fs.existsSync(pkgJsonPath)) {
         pkgJson = require(pkgJsonPath);
@@ -65,9 +59,9 @@ function installPlatformsFromConfigXML(platforms, opts) {
             comboArray = pkgJsonPlatforms.slice();
         }
 
-        engines = cfg.getEngines(projectHome)
+        engines = cfg.getEngines(projectHome);
         configPlatforms = engines.map(function(Engine) {
-            configPlatName = Engine.name;
+            var configPlatName = Engine.name;
             return configPlatName;
         });
         
@@ -118,12 +112,25 @@ function installPlatformsFromConfigXML(platforms, opts) {
                 events.emit('verbose', 'Package.json and config.xml platforms are different. Updating config.xml with most current list of platforms.');
                 comboArray.forEach(function(item) {
                     if(configPlatforms.indexOf(item) < 0 ) {
-                        cfg.addEngine(item);
-                        modifiedConfigXML = true;
+                        var value = ('cordova-'+item);
+                        // Non cordova- prefix
+                        if(pkgJson.dependencies[item]){
+                            cfg.addEngine(item, pkgJson.dependencies[item]);
+                            modifiedConfigXML = true;
+                        }
+                        // With cordova- prefix
+                        else if (pkgJson.dependencies[value]){
+                            cfg.addEngine(item, pkgJson.dependencies[value]);
+                            modifiedConfigXML = true;
+                        } else {
+                            cfg.addEngine(item);
+                            modifiedConfigXML = true;
+                        }
                     }
                 });
             }
         }
+
         // Write and update pkg.json if it has been modified.
         if (modifiedPkgJson === true) {
             pkgJson.cordova.platforms = comboArray;
@@ -131,7 +138,8 @@ function installPlatformsFromConfigXML(platforms, opts) {
             fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
         }
         if (modifiedConfigXML === true) {
-            configPlatforms = comboArray;
+            // configPlatforms = comboArray;
+            // cfg.addPlugin({name:plugID}, mergedPluginDataObj[plugID]); 
             cfg.write();
         }
         if (!comboArray || !comboArray.length) {
@@ -220,7 +228,7 @@ function installPluginsFromConfigXML(args) {
                     }
                 }
             }
-        })
+        });
 
         // Check to see if pkg.json plugin(id) and config plugin(id) match
         if(comboPluginIdArray.sort().toString() !== pluginIdConfig.sort().toString()) {
@@ -241,21 +249,25 @@ function installPluginsFromConfigXML(args) {
             fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
         }
     }
-    
+
     // Write config.xml
     comboPluginIdArray.forEach(function(plugID) {
         pluginIdConfig.push(plugID);
         cfg.removePlugin(plugID);
-        //TODO: spec needs to be added to addPlugin
-        cfg.addPlugin({name:plugID}, mergedPluginDataObj[plugID]); 
-        modifiedConfigXML = true;
+ 
+        if (pkgJson.dependencies[plugID]) {
+            cfg.addPlugin({name:plugID, spec: pkgJson.dependencies[plugID]}, mergedPluginDataObj[plugID]); 
+            modifiedConfigXML = true; 
+        } else {
+            cfg.addPlugin({name:plugID}, mergedPluginDataObj[plugID]); 
+            modifiedConfigXML = true;
+        }
     });
 
     if (modifiedConfigXML === true) {
         cfg.write();    
     }
     
-
     // Intermediate variable to store current installing plugin name
     // to be able to create informative warning on plugin failure
     var pluginName;

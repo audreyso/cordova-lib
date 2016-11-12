@@ -518,7 +518,8 @@ describe('update config.xml to include platforms in pkg.json', function () {
     }
     /** Test#007 will check the platform list in package.json and config.xml. 
     *   When packge.json has 'android and ios' and config.xml only contains 'android', run cordova
-    *   and config.xml is updated to include 'ios'.
+    *   and config.xml is updated to include 'ios'. Also, if there is a specified spec in pkg.json,
+    *   it should be added to config.xml during restore.
     */
     it('Test#007 : if pkgJson has android & ios platforms and config.xml has android, update config to also include ios', function(done) {
         var cwd = process.cwd();
@@ -537,6 +538,8 @@ describe('update config.xml to include platforms in pkg.json', function () {
         expect(configEngArray.indexOf('android')).toBeGreaterThan(-1);
         expect(configEngArray.indexOf('ios')).toEqual(-1);
         expect(configEngArray.length === 1);
+        // Pkg.json has cordova-ios in its dependencies.
+        expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.3.0' });
        
         emptyPlatformList().then(function() {
             // Run cordova prepare
@@ -556,6 +559,10 @@ describe('update config.xml to include platforms in pkg.json', function () {
             expect(configEngArray.indexOf('android')).toBeGreaterThan(-1);
             // Expect config.xml array to have 2 elements (platforms);
             expect(configEngArray.length === 2);
+            // Check to make sure that 'ios' spec was added properly.
+            expect(engines).toEqual([ { name: 'android', spec: null },{ name: 'ios', spec: '^4.3.0' } ]);
+            // No change to pkg.json dependencies
+            expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.3.0' });
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -1022,7 +1029,8 @@ describe('update config.xml to include the plugin that is in pkg.json', function
     }
     /** Test#015 will check the plugin/variable list in package.json and config.xml. 
     *   When config has 0 plugins, it will get updated with the plugins from
-    *   pkg.json.
+    *   pkg.json. When config.xml is restored, the plugins will be restored with the spec
+    *   in pkg.json dependencies.
     */
     it('Test#015 : update config.xml to include all plugins/variables from pkg.json', function(done) {
         var cwd = process.cwd();
@@ -1044,6 +1052,8 @@ describe('update config.xml to include the plugin that is in pkg.json', function
         expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toBeDefined();
         // Pkg.json camera plugin has var1, value 1
         expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toEqual({ variable_1: 'value_1' });
+        // Pkg.json has '^2.3.0' spec for camera plugin
+        expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-camera': '^2.3.0' });
 
         emptyPlatformList().then(function() {
             // Run cordova prepare
@@ -1059,6 +1069,9 @@ describe('update config.xml to include the plugin that is in pkg.json', function
             for (var i = 0; i < configPlugins.length; i++) {
                 configPlugin = cfg2.getPlugin(configPlugins[i]);
                 configPluginVariables = configPlugin.variables;
+                // Check that the camera plugin has the correct spec
+                expect(configPlugin.spec).toEqual('^2.3.0');
+                expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-camera': '^2.3.0' });
                 // Config.xml camera variables have been added
                 if(configPlugin.name === 'cordova-plugin-camera') {
                     expect(configPluginVariables).toEqual({ variable_1: 'value_1' });
