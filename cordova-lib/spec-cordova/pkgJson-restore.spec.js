@@ -29,7 +29,7 @@ var helpers = require('./helpers'),
 */
 
 // Use basePkgJson
-xdescribe('platform end-to-end with --save', function () {
+describe('platform end-to-end with --save', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
     var results;
