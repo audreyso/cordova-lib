@@ -29,7 +29,7 @@ var helpers = require('./helpers'),
 */
 
 // Use basePkgJson
-describe('platform end-to-end with --save', function () {
+xdescribe('platform end-to-end with --save', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
     var results;
@@ -364,7 +364,8 @@ describe('update pkg.json to include platforms in config.xml', function () {
     }
     /** Test#005 will check the platform list in package.json and config.xml. 
     *   When config.xml has 'android and ios' and pkg.json only contains 'android', run cordova
-    *   and pkg.json is updated to include 'ios'.
+    *   and pkg.json is updated to include 'ios'. This test will also check that pkg.json
+    *   is updated with the correct spec/dependencies when restored.
     */
     it('Test#005 : if config.xml has android & ios platforms and pkg.json has android, update pkg.json to also include ios', function(done) {
         var cwd = process.cwd();
@@ -378,28 +379,36 @@ describe('update pkg.json to include platforms in config.xml', function () {
             return elem.name;
         });
         var configEngArray = engNames.slice();
+        var androidPlatform = 'android';
+        var iosPlatform = 'ios';
        
         // Config.xml contains(android & ios) and pkg.json contains android (basePkgJson5)
-        expect(configEngArray.indexOf('android')).toBeGreaterThan(-1);
-        expect(configEngArray.indexOf('ios')).toBeGreaterThan(-1);
+        expect(configEngArray.indexOf(androidPlatform)).toBeGreaterThan(-1);
+        expect(configEngArray.indexOf(iosPlatform)).toBeGreaterThan(-1);
         // pkg.json should not contain 'ios' platform before cordova prepare
-        expect(pkgJson.cordova.platforms.indexOf('ios')).toEqual(-1);
-        expect(pkgJson.cordova.platforms.indexOf('android')).toBeGreaterThan(-1);
+        expect(pkgJson.cordova.platforms.indexOf(iosPlatform)).toEqual(-1);
+        expect(pkgJson.cordova.platforms.indexOf(androidPlatform)).toBeGreaterThan(-1);
+        // pkg.json ios/android specs should be undefined
+        expect(pkgJson.dependencies[iosPlatform]).toBeUndefined();
+        expect(pkgJson.dependencies[androidPlatform]).toBeUndefined();
         emptyPlatformList().then(function() {
             return cordova.raw.prepare();
         }).then(function() {
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             // Expect 'ios' to be added to pkg.json
-            expect(pkgJson.cordova.platforms.indexOf('ios')).toBeGreaterThan(-1);
+            expect(pkgJson.cordova.platforms.indexOf(iosPlatform)).toBeGreaterThan(-1);
             // Expect 'android' to still be there in pkg.json
-            expect(pkgJson.cordova.platforms.indexOf('android')).toBeGreaterThan(-1);
+            expect(pkgJson.cordova.platforms.indexOf(androidPlatform)).toBeGreaterThan(-1);
             // Expect both pkg.json and config.xml to each have both platforms in their arrays
             expect(configEngArray.length === 2);
             expect(pkgJson.cordova.platforms.length === 2);
             // No changes to config.xml
-            expect(configEngArray.indexOf('android')).toBeGreaterThan(-1);
-            expect(configEngArray.indexOf('ios')).toBeGreaterThan(-1);
+            expect(configEngArray.indexOf(androidPlatform)).toBeGreaterThan(-1);
+            expect(configEngArray.indexOf(iosPlatform)).toBeGreaterThan(-1);
+            // Platform specs from config.xml have been added to pkg.json
+            expect(pkgJson.dependencies['cordova-ios']).toEqual('^4.3.0');
+            expect(pkgJson.dependencies['cordova-android']).toEqual('6.0.0');
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -517,7 +526,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
         });
     }
     /** Test#007 will check the platform list in package.json and config.xml. 
-    *   When packge.json has 'android and ios' and config.xml only contains 'android', run cordova
+    *   When package.json has 'android and ios' and config.xml only contains 'android', run cordova
     *   and config.xml is updated to include 'ios'. Also, if there is a specified spec in pkg.json,
     *   it should be added to config.xml during restore.
     */
@@ -539,8 +548,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
         expect(configEngArray.indexOf('ios')).toEqual(-1);
         expect(configEngArray.length === 1);
         // Pkg.json has cordova-ios in its dependencies.
-        expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.3.0' });
-       
+        expect(pkgJson.dependencies).toEqual({ 'cordova-android' : '^3.1.0', 'cordova-ios' : '^4.3.0' });
         emptyPlatformList().then(function() {
             // Run cordova prepare
             return cordova.raw.prepare();
@@ -560,9 +568,11 @@ describe('update config.xml to include platforms in pkg.json', function () {
             // Expect config.xml array to have 2 elements (platforms);
             expect(configEngArray.length === 2);
             // Check to make sure that 'ios' spec was added properly.
-            expect(engines).toEqual([ { name: 'android', spec: null },{ name: 'ios', spec: '^4.3.0' } ]);
+            expect(engines).toEqual([ { name: 'android', spec: '^3.1.0' },{ name: 'ios', spec: '^4.3.0' } ]);
             // No change to pkg.json dependencies
-            expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.3.0' });
+            expect(pkgJson.dependencies).toEqual({ 'cordova-android' : '^3.1.0', 'cordova-ios' : '^4.3.0' });
+            expect(pkgJson.dependencies['cordova-android']).toEqual('^3.1.0');
+            expect(pkgJson.dependencies['cordova-ios']).toEqual('^4.3.0');
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
