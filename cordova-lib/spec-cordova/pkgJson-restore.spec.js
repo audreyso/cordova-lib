@@ -935,15 +935,21 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
             configPluginVariables = configPlugin.variables;
             if(configPlugin.name === 'cordova-plugin-camera') {
                 expect(configPluginVariables).toEqual({ variable_1: 'value_1', variable_2: 'value_2' });
+                // Config.xml camera plugin has the spec ~2.2.0
+                expect(configPlugin.spec).toEqual('~2.2.0');
             }
             if(configPlugin.name === 'cordova-plugin-device') {
                 expect(configPluginVariables).toEqual({});
+                // Config.xml device plugin has the spec ~1.0.0
+                expect(configPlugin.spec).toEqual('~1.0.0');
             }
         }
         // Expect that pkg.json exists with 2 plugins
         expect(pkgJson.cordova.plugins).toBeDefined();
         expect(Object.keys(pkgJson.cordova.plugins).length === 2);
         expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toBeDefined();
+        // Pkg.json camera plugin's spec is ^2.3.0
+        expect(pkgJson.dependencies['cordova-plugin-camera']).toEqual('^2.3.0');
         expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toBeDefined();
         // Pkg.json does not have device yet
         expect(pkgJson.cordova.plugins['cordova-plugin-device']).toBeUndefined();
@@ -970,10 +976,14 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
                 if(configPlugin.name === 'cordova-plugin-camera') {
                     expect(configPluginVariables).toEqual({ variable_1: 'value_1',
                     variable_3: 'value_3', variable_2: 'value_2' });
+                    // Config.xml plugin spec should be updated to ^2.3.0
+                    expect(configPlugin.spec).toEqual('^2.3.0');
                 }
                 // Expect that splashscreen and device have 0 variables
                 if(configPlugin.name === 'cordova-plugin-device') {
                     expect(configPluginVariables).toEqual({});
+                    // Config.xml device plugin still has the spec ~1.0.0
+                    expect(configPlugin.spec).toEqual('~1.0.0');
                 }
                 if(configPlugin.name === 'cordova-plugin-splashscreen') {
                     expect(configPluginVariables).toEqual({});
@@ -984,11 +994,13 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
             expect(configPlugins.indexOf('cordova-plugin-camera')).toEqual(0);
             expect(configPlugins.indexOf('cordova-plugin-splashscreen')).toEqual(1);
             expect(configPlugins.indexOf('cordova-plugin-device')).toEqual(2);
-            // Pkg.json has all 3 plugins
+            // Pkg.json has all 3 plugins with the correct specs
             expect(Object.keys(pkgJson.cordova.plugins).length === 3);
             expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toBeDefined();
+            expect(pkgJson.dependencies['cordova-plugin-camera']).toEqual('^2.3.0');
             expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toBeDefined();
             expect(pkgJson.cordova.plugins['cordova-plugin-device']).toBeDefined();
+            expect(pkgJson.dependencies['cordova-plugin-device']).toEqual('~1.0.0');
             // Expect that splashscreen and device have 0 variables
             expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toEqual({});
             expect(pkgJson.cordova.plugins['cordova-plugin-device']).toEqual({});
@@ -1047,8 +1059,9 @@ describe('update config.xml to include the plugin that is in pkg.json', function
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
         delete require.cache[require.resolve(pkgJsonPath)];
-        var cfg1 = new ConfigParser(configXmlPath);
-        var configPlugins = cfg1.getPluginIdList();
+        var cfg10 = new ConfigParser(configXmlPath);
+        var configPlugins = cfg10.getPluginIdList();
+        var configPluginSpecs = cfg10.getPlugin(configPlugins);
         var pkgJson = require(pkgJsonPath);
         var configPlugin;
         var configPluginVariables;
@@ -1074,20 +1087,25 @@ describe('update config.xml to include the plugin that is in pkg.json', function
             pkgJson = require(pkgJsonPath);
             var cfg2 = new ConfigParser(configXmlPath);
             configPlugins = cfg2.getPluginIdList();
+            configPluginSpecs = cfg2.getPlugin(configPlugins);
 
             // Check to make sure that the variables were added as expected
             for (var i = 0; i < configPlugins.length; i++) {
                 configPlugin = cfg2.getPlugin(configPlugins[i]);
                 configPluginVariables = configPlugin.variables;
-                // Check that the camera plugin has the correct spec
-                expect(configPlugin.spec).toEqual('^2.3.0');
+                // Pkg.json dependencies should be the same
                 expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-camera': '^2.3.0' });
                 // Config.xml camera variables have been added
                 if(configPlugin.name === 'cordova-plugin-camera') {
                     expect(configPluginVariables).toEqual({ variable_1: 'value_1' });
+                    // Check that the camera plugin has the correct spec and has been updated in config.xml
+                    expect(configPlugin.spec).toEqual('^2.3.0');
+    
                 }
             }
-            // Config.xml now has the camera plugin
+            // Check to make sure that the config.xml spec was overwritten by the pkg.json one
+            expect(configPluginSpecs).toEqual( { name: 'cordova-plugin-camera',spec: '^2.3.0',variables: { variable_1: 'value_1' } });
+
             expect(Object.keys(configPlugins).length === 1);
             expect(configPlugins.indexOf('cordova-plugin-camera')).toEqual(0);
             // No changes to pkg.json
