@@ -423,6 +423,15 @@ describe('platform end-to-end with --save', function () {
             expect(pkgJson.cordova.platforms.indexOf('ios')).toEqual(-1);
             expect(pkgJson.dependencies['cordova-android']).toBeUndefined();
             expect(pkgJson.dependencies['cordova-ios']).toBeUndefined();
+            // Check that platforms are removed from config.xml too
+            var cfg4 = new ConfigParser(configXmlPath);
+            engines = cfg4.getEngines();
+            engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            configEngArray = engNames.slice();
+            // Check that android and ios were added to config.xml with the correct spec.
+            expect(configEngArray.length === 0);
         }).then(emptyPlatformList) // platform ls should be empty too.
         .fail(function(err) {
             expect(err).toBeUndefined();
