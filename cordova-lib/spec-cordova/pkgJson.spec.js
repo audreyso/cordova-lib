@@ -67,7 +67,7 @@ describe('plugin end-to-end', function() {
             expect(pkgJson.cordova.plugins[pluginId]).toBeDefined();
         }).then(function() {
             // And now remove it with --save.
-            return cordova.raw.plugin('rm', pluginId, {'save':true})
+            return cordova.raw.plugin('rm', pluginId, {'save':true});
         }).then(function() {
             // Delete any previous caches of require(package.json)
             delete require.cache[require.resolve(pkgJsonPath)];
@@ -120,7 +120,7 @@ describe('plugin end-to-end', function() {
             expect(pkgJson.cordova.plugins[pluginId]).toBeDefined();
         }).then(function() {
             // And now remove it, but without --save.
-            return cordova.raw.plugin('rm', 'cordova-plugin-device')
+            return cordova.raw.plugin('rm', 'cordova-plugin-device');
         }).then(function() {
             // Delete any previous caches of require(package.json)
             delete require.cache[require.resolve(pkgJsonPath)];
@@ -135,6 +135,7 @@ describe('plugin end-to-end', function() {
     it('Test#004 : should successfully add and remove a plugin with variables and save to package.json', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
+        var someKey = 'someKey';
 
         expect(pkgJsonPath).toExist();
 
@@ -148,10 +149,10 @@ describe('plugin end-to-end', function() {
             expect(pkgJson).not.toBeUndefined();
             expect(pkgJson.cordova.plugins).toBeDefined();
             expect(pkgJson.cordova.plugins[pluginId]).toBeDefined();
-            expect(pkgJson.cordova.plugins[pluginId]['someKey']).toEqual('someValue');
+            expect(pkgJson.cordova.plugins[pluginId][someKey]).toEqual('someValue');
         }).then(function() {
             // And now remove it with --save.
-            return cordova.raw.plugin('rm', pluginId, {'save':true})
+            return cordova.raw.plugin('rm', pluginId, {'save':true});
         }).then(function() {
             // Delete any previous caches of require(package.json)
             delete require.cache[require.resolve(pkgJsonPath)];
@@ -182,7 +183,7 @@ describe('plugin end-to-end', function() {
             expect(pkgJson.dependencies['cordova-plugin-device-motion']).toBeDefined();
         }).then(function() {
             // And now remove it with --save.
-            return cordova.raw.plugin('rm', [pluginId,'cordova-plugin-device-motion'], {'save':true, 'fetch':true})
+            return cordova.raw.plugin('rm', [pluginId,'cordova-plugin-device-motion'], {'save':true, 'fetch':true});
         }).then(function() {
             // Delete any previous caches of require(package.json)
             delete require.cache[require.resolve(pkgJsonPath)];
@@ -309,8 +310,8 @@ describe('platform end-to-end with --save', function () {
             // Check the platform add was successful, reload, skipping cache
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            // Platform list should be empty and helpers.testPlatform should NOT have been added.
-            expect(pkgJson.cordova.platforms.length).toEqual(0);
+            // PkgJson.cordova should not be defined and helpers.testPlatform should NOT have been added.
+            expect(pkgJson.cordova).toBeUndefined();
         }).then(fullPlatformList)
         .fail(function(err) {
             expect(err).toBeUndefined();
@@ -334,16 +335,16 @@ describe('platform end-to-end with --save', function () {
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             // Beware empty/missing cordova object
-            var pckJsonCordova = pkgJson.cordova || {platforms:[]};
+            var pkgJsonCordova = pkgJson.cordova || {platforms:[]};
             // Check that only the platform added with --save was added to package.json.
-            expect(pckJsonCordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-            expect(pckJsonCordova.platforms.indexOf(platformNotToAdd)).toEqual(-1);
+            expect(pkgJsonCordova.platforms.indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
+            expect(pkgJsonCordova.platforms.indexOf(platformNotToAdd)).toEqual(-1);
         })
         .fail(function(err) {
             expect(err).toBeUndefined();
         })
         .fin(done);
-    });
+    }, 30000);
     it('Test#010 : two platforms are added and removed correctly with --save --fetch', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         expect(pkgJsonPath).toExist();

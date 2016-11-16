@@ -125,7 +125,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
                 return downloadPlatform(projectRoot, platform, spec, opts);
             }).then(function(platDetails) {
-                delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
                 platform = platDetails.platform;
                 var platformPath = path.join(projectRoot, 'platforms', platform);
                 var platformAlreadyAdded = fs.existsSync(platformPath);
@@ -250,13 +249,13 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             var pkgJson;
             var pkgJsonPath = path.join(projectRoot, 'package.json');
             var modifiedPkgJson = false;
-
             if(fs.existsSync(pkgJsonPath)) {
                 delete require.cache[require.resolve(pkgJsonPath)]; 
                 pkgJson = require(pkgJsonPath);
             } else {
-                // Create package.json in cordova@7
+                // TODO: Create package.json in cordova@7
             }
+
             if (pkgJson === undefined) {
                 return;
             }
