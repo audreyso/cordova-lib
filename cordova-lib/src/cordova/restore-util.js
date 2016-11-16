@@ -180,14 +180,19 @@ function installPlatformsFromConfigXML(platforms, opts) {
     // Otherwise, we get a bug where the following line: https://github.com/apache/cordova-lib/blob/0b0dee5e403c2c6d4e7262b963babb9f532e7d27/cordova-lib/src/util/npm-helper.js#L39
     // gets executed simultaneously by each platform and leads to an exception being thrown
     return promiseutil.Q_chainmap_graceful(comboArray, function(target) {
+        var cwd = process.cwd();
+        var platformsFolderPath = path.join(cwd,'platforms');
+        var platformsInstalled = path.join(platformsFolderPath, target);
         if (target) {
             // Add the spec to the target
             if(mergedPlatformSpecs[target]) {
                 target = target + '@' + mergedPlatformSpecs[target];
             }
-           
-            events.emit('log', 'Discovered platform \"' + target + '\" in config.xml or package.json. Adding it to the project');
-            return cordova.raw.platform('add', target, opts);
+            // If the platform is already installed, no need to re-install.
+            if (!fs.existsSync(platformsInstalled)) {
+                events.emit('log', 'Discovered platform \"' + target + '\" in config.xml or package.json. Adding it to the project');
+                return cordova.raw.platform('add', target, opts);
+            }
         }
         return Q();
     }, function(err) {
