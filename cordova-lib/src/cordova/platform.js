@@ -125,6 +125,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 }
                 return downloadPlatform(projectRoot, platform, spec, opts);
             }).then(function(platDetails) {
+                delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
                 platform = platDetails.platform;
                 var platformPath = path.join(projectRoot, 'platforms', platform);
                 var platformAlreadyAdded = fs.existsSync(platformPath);
