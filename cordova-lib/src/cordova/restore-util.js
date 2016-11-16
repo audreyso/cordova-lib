@@ -71,7 +71,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
             }
             return configPlatName;
         });
-        
         configPlatforms.forEach(function(item) {
             if(comboArray.indexOf(item) < 0 ) {
                 comboArray.push(item);
@@ -93,7 +92,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
 
         // If no package.json, don't bother
         if (pkgJson !== undefined) { 
-
             // If config.xml & pkgJson exist and the cordova key is undefined, create a cordova key.
             if (pkgJson.cordova === undefined) {
                 pkgJson.cordova = {};
@@ -115,7 +113,6 @@ function installPlatformsFromConfigXML(platforms, opts) {
             events.emit('verbose', 'Package.json and config.xml platforms are different. Updating config.xml with most current list of platforms.');
             comboArray.forEach(function(item) {
                 var prefixItem = ('cordova-'+item);
-
                 // Modify package.json if any of these cases are true
                 if((pkgJson.dependencies === undefined && Object.keys(mergedPlatformSpecs).length)||
                     (pkgJson.dependencies[item] === undefined && mergedPlatformSpecs[item]) ||
@@ -148,13 +145,16 @@ function installPlatformsFromConfigXML(platforms, opts) {
                     cfg.removeEngine(item);
                     cfg.addEngine(item);
                     modifiedConfigXML = true;
-                }   
+                } 
             });
         }
 
         // Write and update pkg.json if it has been modified.
         if (modifiedPkgJson === true) {
             pkgJson.cordova.platforms = comboArray;
+            if(pkgJson.dependencies === undefined) {
+                pkgJson.dependencies = {};
+            }
             // Check if key is part of cordova alias list.
             // Add prefix if it is.
             for (key in mergedPlatformSpecs) {
@@ -293,6 +293,9 @@ function installPluginsFromConfigXML(args) {
         // If pkg.json plugins have been modified, write to it
         if (modifiedPkgJson === true) {
             pkgJson.cordova.plugins = comboObject;
+            if(pkgJson.dependencies === undefined) {
+                pkgJson.dependencies = {};
+            }
             for(key in mergedPluginSpecs) {
                 pkgJson.dependencies[key] = mergedPluginSpecs[key];
             }
@@ -301,7 +304,9 @@ function installPluginsFromConfigXML(args) {
     }
     // Write config.xml (only if plugins exist in package.json)
     comboPluginIdArray.forEach(function(plugID) {
-        pluginIdConfig.push(plugID);
+        if(pluginIdConfig.indexOf(plugID) < 0) {
+            pluginIdConfig.push(plugID);
+        }
         cfg.removePlugin(plugID);
 
         if (mergedPluginSpecs[plugID]) {
@@ -320,7 +325,6 @@ function installPluginsFromConfigXML(args) {
     // Intermediate variable to store current installing plugin name
     // to be able to create informative warning on plugin failure
     var pluginName;
-
     // CB-9560 : Run `plugin add` serially, one plugin after another
     // We need to wait for the plugin and its dependencies to be installed
     // before installing the next root plugin otherwise we can have common
