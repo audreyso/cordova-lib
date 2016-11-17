@@ -30,7 +30,7 @@ var cordova_util    = require('./util'),
 
 exports.installPluginsFromConfigXML = installPluginsFromConfigXML;
 exports.installPlatformsFromConfigXML = installPlatformsFromConfigXML;
-
+// Install platforms looking at config.xml and package.json (if there is one).
 function installPlatformsFromConfigXML(platforms, opts) {
     events.emit('verbose', 'Checking config.xml and package.json for saved platforms that haven\'t been added to the project');
 
@@ -48,6 +48,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
     var mergedPlatformSpecs = {};
     var key;
 
+    // Check if path exists and require pkgJsonPath.
     if(fs.existsSync(pkgJsonPath)) {
         pkgJson = require(pkgJsonPath);
     }
@@ -58,14 +59,14 @@ function installPlatformsFromConfigXML(platforms, opts) {
     if(cfg !== undefined) {
 
         if (pkgJsonPlatforms !== undefined) {
-            // Combining arrays and checking duplicates
+            // Combining arrays and checking duplicates.
             comboArray = pkgJsonPlatforms.slice();
         }
 
         engines = cfg.getEngines(projectHome);
         configPlatforms = engines.map(function(Engine) {
             var configPlatName = Engine.name;
-            // Add specs from config into mergedPlatformSpecs
+            // Add specs from config into mergedPlatformSpecs.
             if(mergedPlatformSpecs[configPlatName] === undefined && Engine.spec) {
                 mergedPlatformSpecs[configPlatName] = Engine.spec;
             }
@@ -76,8 +77,8 @@ function installPlatformsFromConfigXML(platforms, opts) {
                 comboArray.push(item);
             }
         });
-        // ComboArray should have all platforms from config.xml & package.json
-        // Remove duplicates in comboArray & sort
+        // ComboArray should have all platforms from config.xml & package.json.
+        // Remove duplicates in comboArray & sort.
         var uniq = comboArray.reduce(function(a,b) {
             if (a.indexOf(b) < 0 ) a.push(b);
                 return a;
@@ -85,12 +86,12 @@ function installPlatformsFromConfigXML(platforms, opts) {
         comboArray = uniq;
         comboArray = comboArray.sort();
 
-        // No platforms to restore from either config.xml or package.json
+        // No platforms to restore from either config.xml or package.json.
         if (comboArray.length <= 0) {
            return Q('No platforms found in config.xml or package.json. Nothing to restore');
         }
 
-        // If no package.json, don't bother
+        // If no package.json, don't continue.
         if (pkgJson !== undefined) { 
             // If config.xml & pkgJson exist and the cordova key is undefined, create a cordova key.
             if (pkgJson.cordova === undefined) {
@@ -104,8 +105,8 @@ function installPlatformsFromConfigXML(platforms, opts) {
             if (comboArray.toString() === pkgJson.cordova.platforms.sort().toString()) {
                 events.emit('verbose', 'Config.xml and package.json platforms are the same. No pkg.json modification.');
             } else {
-                // Modify pkg.json to include the elements
-                // From the comboArray array so that the arrays are identical
+                // Modify pkg.json to include the elements.
+                // From the comboArray array so that the arrays are identical.
                 events.emit('verbose', 'Config.xml and package.json platforms are different. Updating package.json with most current list of platforms.');
                 modifiedPkgJson = true;
             }
@@ -113,14 +114,14 @@ function installPlatformsFromConfigXML(platforms, opts) {
             events.emit('verbose', 'Package.json and config.xml platforms are different. Updating config.xml with most current list of platforms.');
             comboArray.forEach(function(item) {
                 var prefixItem = ('cordova-'+item);
-                // Modify package.json if any of these cases are true
+                // Modify package.json if any of these cases are true:
                 if((pkgJson.dependencies === undefined && Object.keys(mergedPlatformSpecs).length)||
                     (pkgJson.dependencies[item] === undefined && mergedPlatformSpecs[item]) ||
                     (pkgJson.dependencies[prefixItem] === undefined && mergedPlatformSpecs[prefixItem])) {
                     modifiedPkgJson = true;
                 }
 
-                // Get the cordova- prefixed spec from package.json and add it to mergedPluginSpecs
+                // Get the cordova- prefixed spec from package.json and add it to mergedPluginSpecs.
                 if (pkgJson.dependencies && pkgJson.dependencies[prefixItem]) {
                     if(mergedPlatformSpecs[prefixItem] != pkgJson.dependencies[prefixItem]) {
                         modifiedPkgJson = true;
@@ -128,7 +129,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
                     mergedPlatformSpecs[item] = pkgJson.dependencies[prefixItem];
                 }
 
-                // Get the spec from package.json and add it to mergedPluginSpecs
+                // Get the spec from package.json and add it to mergedPluginSpecs.
                 if (pkgJson.dependencies && pkgJson.dependencies[item] && pkgJson.dependencies[prefixItem] === undefined) {
                     if(mergedPlatformSpecs[item] != pkgJson.dependencies[item]) {
                         modifiedPkgJson = true;
@@ -136,11 +137,13 @@ function installPlatformsFromConfigXML(platforms, opts) {
                     mergedPlatformSpecs[item] = pkgJson.dependencies[item];
                 }
 
-                // First remove and then add missing engine elements to config.xml
+                // First remove the engine and then add missing engine and elements to config.xml.
+                // Remove to avoid duplicate engines.
                 if(mergedPlatformSpecs[item]) {
                     cfg.removeEngine(item);
                     cfg.addEngine(item, mergedPlatformSpecs[item]);
                     modifiedConfigXML = true;
+                // If there is no spec, just remove and add the engine.
                 } else if (configPlatforms.indexOf(item) < 0) {
                     cfg.removeEngine(item);
                     cfg.addEngine(item);
@@ -188,7 +191,7 @@ function installPlatformsFromConfigXML(platforms, opts) {
             if(mergedPlatformSpecs[target]) {
                 target = target + '@' + mergedPlatformSpecs[target];
             }
-            // If the platform is already installed, no need to re-install.
+            // If the platform is already installed, no need to re-install it.
             if (!fs.existsSync(platformsInstalled)) {
                 events.emit('log', 'Discovered platform \"' + target + '\" in config.xml or package.json. Adding it to the project');
                 return cordova.raw.platform('add', target, opts);
@@ -200,10 +203,10 @@ function installPlatformsFromConfigXML(platforms, opts) {
     });
 }
 
-//returns a Promise
+// Returns a promise.
 function installPluginsFromConfigXML(args) {
     events.emit('verbose', 'Checking config.xml for saved plugins that haven\'t been added to the project');
-    //Install plugins that are listed on config.xml
+    //Install plugins that are listed in config.xml.
     var projectRoot = cordova_util.cdProjectRoot();
     var configPath = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(configPath);
@@ -220,7 +223,7 @@ function installPluginsFromConfigXML(args) {
     var pkgJsonPluginVariables;
     var key;
 
-    //Check if path exists and require pkgJsonPath
+    // Check if path exists and require pkgJsonPath.
     if(fs.existsSync(pkgJsonPath)) {
         pkgJson = require(pkgJsonPath);
     }
@@ -228,14 +231,14 @@ function installPluginsFromConfigXML(args) {
     if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {
         comboPluginIdArray = Object.keys(pkgJson.cordova.plugins);
         // Create a merged plugin data array (comboObject)
-        // and add all of the package.json plugins to comboObject
+        // and add all of the package.json plugins to comboObject.
         comboObject = pkgJson.cordova.plugins;
     } else {
         comboObject = {};
         comboPluginIdArray = [];
     }
 
-    // Get all config.xml plugin ids
+    // Get all config.xml plugin ids (names).
     var pluginIdConfig = cfg.getPluginIdList();
     if(pluginIdConfig === undefined) {
         pluginIdConfig = [];
@@ -249,16 +252,16 @@ function installPluginsFromConfigXML(args) {
             pkgJson.cordova.plugins = {};
         }
 
-        // Check to see which plugins are initially the same in pkg.json and config.xml
-        // Add missing plugin variables in package.json from config.xml
+        // Check to see which plugins are initially the same in pkg.json and config.xml.
+        // Add missing plugin variables in package.json from config.xml.
         comboPluginIdArray.forEach(function(item) {
             if(pluginIdConfig.includes(item)) {
                 configPlugin = cfg.getPlugin(item);
                 configPluginVariables = configPlugin.variables;
                 pkgJsonPluginVariables = comboObject[item];
                 for(var key in configPluginVariables) {
-                    // Handle conflicts, package.json wins
-                    // Only add the variable to package.json if it doesn't already exist
+                    // Handle conflicts, package.json wins.
+                    // Only add the variable to package.json if it doesn't already exist.
                     if(pkgJsonPluginVariables[key] === undefined) {
                         pkgJsonPluginVariables[key] = configPluginVariables[key];
                         comboObject[item][key] = configPluginVariables[key];
@@ -266,17 +269,16 @@ function installPluginsFromConfigXML(args) {
                     }
                 }
             }
-            // Get the spec from package.json and add it to mergedPluginSpecs
+            // Get the spec from package.json and add it to mergedPluginSpecs.
             if (pkgJson.dependencies && pkgJson.dependencies[item]) {
                 mergedPluginSpecs[item] = pkgJson.dependencies[item];
             }
-
         });
 
-        // Check to see if pkg.json plugin(id) and config plugin(id) match
+        // Check to see if pkg.json plugin(id) and config plugin(id) match.
         if(comboPluginIdArray.sort().toString() !== pluginIdConfig.sort().toString()) {
             // If there is a config plugin that does NOT already exist in
-            // mergedPluginDataArray, add it and its variables
+            // mergedPluginDataArray, add it and its variables.
             pluginIdConfig.forEach(function(item) {
                 if(comboPluginIdArray.indexOf(item) < 0) {
                     comboPluginIdArray.push(item);
@@ -287,7 +289,7 @@ function installPluginsFromConfigXML(args) {
             });
         }
 
-        // Add specs from config.xml to mergedPluginSpecs
+        // Add specs from config.xml to mergedPluginSpecs.
         pluginIdConfig.forEach(function(item) {
             var configXMLPlugin = cfg.getPlugin(item);
             if(mergedPluginSpecs[item] === undefined && configXMLPlugin.spec) {
@@ -295,7 +297,7 @@ function installPluginsFromConfigXML(args) {
                 modifiedPkgJson = true;
             }
         });
-        // If pkg.json plugins have been modified, write to it
+        // If pkg.json plugins have been modified, write to it.
         if (modifiedPkgJson === true) {
             pkgJson.cordova.plugins = comboObject;
             if(pkgJson.dependencies === undefined) {
@@ -307,16 +309,16 @@ function installPluginsFromConfigXML(args) {
             fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
         }
     }
-    // Write config.xml (only if plugins exist in package.json)
+    // Write config.xml (only if plugins exist in package.json).
     comboPluginIdArray.forEach(function(plugID) {
         if(pluginIdConfig.indexOf(plugID) < 0) {
             pluginIdConfig.push(plugID);
         }
         cfg.removePlugin(plugID);
-
         if (mergedPluginSpecs[plugID]) {
             cfg.addPlugin({name:plugID, spec: mergedPluginSpecs[plugID]}, comboObject[plugID]); 
-            modifiedConfigXML = true; 
+            modifiedConfigXML = true;
+        // If no spec, just add the plugin.
         } else {
             cfg.addPlugin({name:plugID}, comboObject[plugID]); 
             modifiedConfigXML = true;
