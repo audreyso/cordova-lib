@@ -66,6 +66,74 @@ describe('platform end-to-end with --save', function () {
             expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
         });
     }
+
+    /** Test#000 will check that when a platform is added with a spec, it will 
+    *   add to pkg.json with a '^' and to config.xml with a '~'. When prepare is run,
+    *   pkg.json will have no change and config.xml (first char) will change from a '~' to a '^'.
+    */
+    it('Test#000 : tests that the spec (~,^) is added and updated as expected in config.xml', function(done) {
+        var cwd = process.cwd();
+        var pkgJsonPath = path.join(cwd,'package.json');
+        delete require.cache[require.resolve(pkgJsonPath)];
+        var pkgJson;
+        var iosPlatform = 'ios';
+        var configXmlPath = path.join(cwd, 'config.xml');
+
+        emptyPlatformList().then(function() {
+            // Add the ios platform with save, fetch
+            return cordova.raw.platform('add', iosPlatform, {'save':true , 'fetch':true});
+        }).then(function() {
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // Added to ios properly to pkg.json
+            expect(pkgJson.cordova.platforms).toBeDefined();
+            expect(pkgJson.cordova.platforms.indexOf(iosPlatform)).toBeGreaterThan(-1);
+            // When spec is added to pkg.json, first char is '^'.
+            expect(pkgJson.dependencies['cordova-'+iosPlatform].charAt(0)).toEqual('^');
+
+            var cfg = new ConfigParser(configXmlPath);
+            var engines = cfg.getEngines();
+            var engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            var engSpec = engines.map(function(elem) {
+                return elem.spec;
+            });
+            // Only ios platform added to config.xml
+            expect(engNames).toEqual([ 'ios' ]);
+            expect(engines.length === 1);
+            // When spec is added to config.xml, first char is '~'.
+            var firstCharConfig = engSpec[0].charAt(0);
+            expect(firstCharConfig === '~');
+        }).then(function() {
+            // Run cordova prepare
+            return cordova.raw.prepare();
+        }).then(function() {
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // No changes to pkg.json spec for ios.
+            expect(pkgJson.dependencies['cordova-'+iosPlatform].charAt(0)).toEqual('^');
+            expect(pkgJson.cordova.platforms.indexOf(iosPlatform)).toBeGreaterThan(-1);
+            // Config.xml spec (first char) should change from '~' to '^'.
+            var cfg1 = new ConfigParser(configXmlPath);
+            engines = cfg1.getEngines();
+            engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            engSpec = engines.map(function(elem) {
+                return elem.spec;
+            });
+            firstCharConfig = engSpec[0].charAt(0);
+            // When spec is added to config.xml, first char is '~'.
+            expect(firstCharConfig === '^');
+            expect(engNames).toEqual([ 'ios' ]);
+            expect(engines.length === 1);
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    // Cordova prepare needs extra wait time to complete.
+    },30000);
+
     /** Test#001 will add a platform to package.json with the 'save' flag.
     *   It will remove it from platforms.json without the save flag.
     *   After running cordova prepare, that platform should be restored in the
@@ -757,6 +825,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
 describe('update pkg.json AND config.xml to include all plugins and merge variables', function () {
     var tmpDir = helpers.tmpDir('plugin_test_pkgjson');
     var project = path.join(tmpDir, 'project');
+    var results;
     var results;
 
     beforeEach(function() {
