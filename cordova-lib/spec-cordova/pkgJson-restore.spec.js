@@ -326,6 +326,84 @@ describe('platform end-to-end with --save', function () {
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
     },30000);
+
+    /** Test#017
+    *
+    */
+    it('Test#017 : test to make sure that platform/plugin url are restored properly', function(done) {
+        var cwd = process.cwd();
+        var pkgJsonPath = path.join(cwd,'package.json');
+        var pkgJson;
+        var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
+        var platformsJson;
+        var configXmlPath = path.join(cwd, 'config.xml');
+
+         emptyPlatformList().then(function() {
+            // Add platform with save and fetch
+            return cordova.raw.platform('add', 'https://github.com/apache/cordova-android', {'save':true, 'fetch':true});
+        }).then(function() {
+            // Check that platform was added to config.xml successfully.
+            var cfg = new ConfigParser(configXmlPath);
+            var engines = cfg.getEngines();
+            var engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            var engSpec = engines.map(function(elem) {
+                return elem.spec;
+            });
+            expect(engNames).toEqual([ 'android' ]);
+            expect(engSpec).toEqual([ 'https://github.com/apache/cordova-android' ]);
+            // Check that platform was added to pkg.json successfully.
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            expect(pkgJson.cordova.platforms.indexOf('android')).toBeDefined();
+            expect(pkgJson.dependencies['cordova-android']).toEqual('git+https://github.com/apache/cordova-android.git');
+            // Check that platform was added to platforms list successfully.
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            expect(platformsJson['android']).toBeDefined();
+        }).then(function() {
+            // Remove platform without --save.
+            return cordova.raw.platform('rm', 'android', {'fetch':true});
+        }).then(function() {
+            // Platform in pkg.json should still be there
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            expect(pkgJson.cordova.platforms.indexOf('android')).toBeDefined();
+            expect(pkgJson.dependencies['cordova-android']).toEqual('git+https://github.com/apache/cordova-android.git');
+            // Platform in platforms.json should not be there.
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            expect(platformsJson['android']).toBeUndefined();
+        }).then(function() {
+            // Run cordova prepare
+            return cordova.raw.prepare({'fetch':true});
+        }).then(function() {
+            // Check config.xml for spec modification.
+            var cfg3 = new ConfigParser(configXmlPath);
+            engines = cfg3.getEngines();
+            engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            engSpec = engines.map(function(elem) {
+                return elem.spec;
+            });
+            expect(engNames).toEqual([ 'android' ]);
+            expect(engSpec).toEqual([ 'git+https://github.com/apache/cordova-android.git' ]);
+            // No change to pkg.json.
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            expect(pkgJson.cordova.platforms.indexOf('android')).toBeDefined();
+            expect(pkgJson.dependencies['cordova-android']).toEqual('git+https://github.com/apache/cordova-android.git');
+            // Check that platform was restored to platforms list successfully.
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            expect(platformsJson['android']).toBeDefined();
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    // Cordova prepare needs extra wait time to complete.
+    },30000);
 });
 
 // Use basePkgJson6 because pkg.json and config.xml contain only android
