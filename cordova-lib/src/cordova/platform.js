@@ -97,7 +97,11 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             return Q.when().then(function() {
                 if (!(platform in platforms)) {
                     spec = platform;
+                    console.log('here');
+                    console.log(spec);
                     platform = null;
+                    console.log('there');
+                    console.log(platform);
                 }
 
                 if(platform === 'amazon-fireos') {
@@ -221,11 +225,25 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 })
                 .then(function() {
                     var saveVersion = !spec || semver.validRange(spec, true);
+                    var pkgJson;
+                    var pkgJsonPath = path.join(projectRoot, 'package.json');
+                    var modifiedPkgJson = false;
+                    if(fs.existsSync(pkgJsonPath)) {
+                        delete require.cache[require.resolve(pkgJsonPath)]; 
+                        pkgJson = require(pkgJsonPath);
+                    } else {
+                        // TODO: Create package.json in cordova@7
+                    }
+
 
                     // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
                     // source location was specified, we always save that. Otherwise we save the version that was
                     // actually installed.
                     var versionToSave = saveVersion ? platDetails.version : spec;
+                    var pkgJsonSpec = 'cordova-'+platform;
+                    if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[pkgJsonSpec]) {
+                        // Use the spec from package.json.
+                    }
                     events.emit('verbose', 'Saving ' + platform + '@' + versionToSave + ' into platforms.json');
                     platformMetadata.save(projectRoot, platform, versionToSave);
 
