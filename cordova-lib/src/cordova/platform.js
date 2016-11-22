@@ -128,13 +128,15 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     spec = getVersionFromConfigFile(platform, cfg);
                 }
+
+                var ENGINES = cfg.getEngines(projectRoot);
                 var pkgJsonSpec = 'cordova-'+platform;
                 if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[pkgJsonSpec]) {
                     // Use the spec from package.json.
                     console.log('dependency is in pkgjson.')
                     console.log(pkgJson.dependencies[pkgJsonSpec]);
                     spec = pkgJson.dependencies[pkgJsonSpec]
-                }  else if(pkgJson.dependencies && !pkgJson.dependencies[pkgJsonSpec]) {
+                }  else if(pkgJson.dependencies && !pkgJson.dependencies[pkgJsonSpec] && platform in ENGINES) {
                     console.log('pkgJson.dependencies spec is not there')
                     var engines = cfg.getEngines(projectRoot);
                     configPlatforms = engines.map(function(engine) {
@@ -143,10 +145,18 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         console.log(configPlatformName);
                         console.log('engine.spec');
                         console.log(engine.spec);
-                        spec = engine.spec;
+                        console.log(engine.name);
+                        if(platform === configPlatformName) {
+                            if(fs.existsSync(path.join(projectRoot, 'package.json'))) {
+                                delete require.cache[require.resolve(path.join(projectRoot, 'package.json'))];
+                            }
+                            spec = engine.spec;
+                        }
                     });
                     console.log('SPEC');
                     console.log(spec);
+                } else {
+                    console.log('the platform is not in ios or config.xml');
                 }
 
                 // If --save/autosave on && no version specified, use the pinned version
