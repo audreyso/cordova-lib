@@ -1485,7 +1485,12 @@ describe('check for expected (4.2.0)spec, if config.xml has iOS spec ~4.2.0 and 
             // Delete any previous caches of require(package.json).
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
+            expect(pkgJson.cordova.platforms).toEqual([iosPlatform]);
+            console.log(pkgJson.cordova.platforms);
+            console.log('pkg json after the add');
+            console.log(pkgJson);
             // pkg.json has ios and the spec from config.xml.
+            // Config.xml
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
             engNames = engines.map(function(elem) {
@@ -1513,13 +1518,18 @@ describe('check for expected (4.2.0)spec, if config.xml has iOS spec ~4.2.0 and 
             // Delete any previous caches of require(package.json).
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            console.log('PACKAGE JSON');
-            console.log(pkgJson);
+            expect(pkgJson.cordova.platforms).toEqual([iosPlatform]);
             // Config.xml
 
         }).then(function() {
             return cordova.raw.prepare();
         }).then(function() {
+            // Pkg.json
+            // Delete any previous caches of require(package.json).
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            expect(pkgJson.cordova.platforms).toEqual(['blackberry10',iosPlatform]);
+            console.log('PACKAGE JSON');
             // Require platformsFolderPath, ios and spec ~4.2.0 should be there.
             delete require.cache[require.resolve(platformsFolderPath)];
             platformsJson = require(platformsFolderPath);
@@ -1527,6 +1537,16 @@ describe('check for expected (4.2.0)spec, if config.xml has iOS spec ~4.2.0 and 
             console.log('platforms JSON');
             console.log(platformsJson);
             //expect(platformsJson).toEqual({ ios : '~4.2.0' });
+            var cfg3 = new ConfigParser(configXmlPath);
+            engines = cfg3.getEngines();
+            engNames = engines.map(function(elem) {
+                return elem.name;
+            });
+            engSpec = engines.map(function(elem) {
+                return elem.spec;
+            });
+            // No change to config.xml.
+            expect(engNames).toEqual([ 'blackberry10','ios' ]);
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
