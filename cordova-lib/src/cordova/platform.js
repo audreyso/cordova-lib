@@ -477,7 +477,7 @@ function getPlatformDetailsFromDir(dir, platformIfKnown){
             if(spec.charAt(0) === '^' || spec.charAt(0) === '~') {
                 specNoPrefix = spec.slice(1);
             }
-            version = specNoPrefix;
+            version = specNoPrefix || spec;
             libDir = libDir.replace(pkg.version, specNoPrefix);
         } else {
             version = pkg.version;
