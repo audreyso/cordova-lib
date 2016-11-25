@@ -121,24 +121,26 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     spec = getVersionFromConfigFile(platform, cfg);
                 }
 
-                 var pkgJsonSpec = 'cordova-'+platform;
-                 if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[pkgJsonSpec]) {
-                     // Use the spec from package.json.
-                     spec = pkgJson.dependencies[pkgJsonSpec]
-                 }  else if(pkgJson.dependencies && !pkgJson.dependencies[pkgJsonSpec]) {
-                     var engines = cfg.getEngines(projectRoot);
-                     configPlatforms = engines.map(function(engine) {
-                         var configPlatformName = engine.name;
-                         spec = engine.spec;
+                var pkgJsonSpec = 'cordova-'+platform;
+                if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[pkgJsonSpec]) {
+                    // Use the spec from package.json.
+                    spec = pkgJson.dependencies[pkgJsonSpec]
+                }   else if(pkgJson.dependencies && !pkgJson.dependencies[pkgJsonSpec]) {
+                    var engines = cfg.getEngines(projectRoot);
+                        configPlatforms = engines.map(function(engine) {
+                            var configPlatformName = engine.name;
+                            if(platform === engine.name) {
+                                spec = engine.spec;
+                            }
                          // TODO: check here for spec
-                     });
-                 }
+                        });
+                    }
 
                 // If --save/autosave on && no version specified, use the pinned version
                 // e.g: 'cordova platform add android --save', 'cordova platform update android --save'
-                // if( (opts.save || autosave) && !spec ){
-                //     spec = platforms[platform].version;
-                // }
+                if( (opts.save || autosave) && !spec ){
+                    spec = platforms[platform].version;
+                }
                 // TODO: check here for spec
 
                 if (spec) {
