@@ -41,7 +41,6 @@ var config            = require('./config'),
     platformMetadata  = require('./platform_metadata');
 
 var spec;
-var configSpec;
 // Expose the platform parsers on top of this command
 for (var p in platforms) {
     module.exports[p] = platforms[p];
@@ -88,61 +87,46 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
         
         var platformsToSave = []; 
 
-        // If statement to see if pkgJsonPath exists in the filesystem
-        
         return promiseutil.Q_chainmap(targets, function(target) {
             // For each platform, download it and call its helper script.
             var parts = target.split('@');
             var platform = parts[0];
-            var spec = parts[1];
             spec = parts[1];
             var pkgJson;
             var pkgJsonPath = path.join(projectRoot, 'package.json');
-            var modifiedPkgJson = false;
             if(fs.existsSync(pkgJsonPath)) {
                 delete require.cache[require.resolve(pkgJsonPath)]; 
                 pkgJson = require(pkgJsonPath);
             }
-
             return Q.when().then(function() {
+                var pkgJsonSpec = 'cordova-'+platform;
                 if (!(platform in platforms)) {
                     spec = platform;
                     platform = null;
                 }
-
                 if(platform === 'amazon-fireos') {
                     events.emit('warn', 'amazon-fireos has been deprecated. Please use android instead.');
                 }
                 if(platform === 'wp8') {
                     events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
                 }
-                if (platform && !spec && cmd == 'add') {
+                if(spec && pkgJson) {
+                    pkgJson.dependencies[pkgJsonSpec] = spec;
+                }
+                // If there is no spec specified during add, use the one from pkg.json.
+                if(spec === undefined && pkgJson && pkgJson.dependencies && pkgJson.dependencies[pkgJsonSpec]) {
+                    spec = pkgJson.dependencies[pkgJsonSpec];
+                }
+                // If there is no spec in pkg.json, use config.xml.
+                if (platform && !spec && cmd == 'add' && !pkgJson || pkgJson && !pkgJson.dependencies || !pkgJson.dependencies[pkgJsonSpec]) {
                     events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     spec = getVersionFromConfigFile(platform, cfg);
-                }
-
-                var pkgJsonSpec = 'cordova-'+platform;
-                if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[pkgJsonSpec]) {
-                    // Use the spec from package.json.
-                    spec = pkgJson.dependencies[pkgJsonSpec]
-                }   else if(pkgJson.dependencies && !pkgJson.dependencies[pkgJsonSpec]) {
-                    var engines = cfg.getEngines(projectRoot);
-                        configPlatforms = engines.map(function(engine) {
-                            var configPlatformName = engine.name;
-                            if(platform === engine.name) {
-                                spec = engine.spec;
-                            }
-                         // TODO: check here for spec
-                        });
-                    }
-
-                // If --save/autosave on && no version specified, use the pinned version
+                }  
+                // If --save/autosave on && no version specified, use the pinned version.
                 // e.g: 'cordova platform add android --save', 'cordova platform update android --save'
                 if( (opts.save || autosave) && !spec ){
                     spec = platforms[platform].version;
                 }
-                // TODO: check here for spec
-
                 if (spec) {
                     var maybeDir = cordova_util.fixRelativePath(spec);
                     if (cordova_util.isDirectory(maybeDir)) {
@@ -162,7 +146,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     if (platformAlreadyAdded) {
                         throw new CordovaError('Platform ' + platform + ' already added.');
                     }
-
                     // Remove the <platform>.json file from the plugins directory, so we start clean (otherwise we
                     // can get into trouble not installing plugins if someone deletes the platform folder but
                     // <platform>.json still exists).
@@ -173,7 +156,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                             cordova_util.binname + ' platform list`.');
                     }
                 }
-
                 if (/-nightly|-dev$/.exec(platDetails.version)) {
                     msg = 'Warning: using prerelease platform ' + platform +
                           '@' + platDetails.version +
@@ -181,10 +163,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                           platform + '@latest\' to add the latest published version instead.';
                     events.emit('warn', msg);
                 }
-
                 if(spec) {
                     platDetails.version = spec;
-                    //platDetails.libDir = '/Users/auso/.cordova/lib/npm_cache/cordova-ios/4.2.1/package';
                 }
 
                 var options = {
@@ -199,7 +179,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     config_json.lib[platform].template) {
                     options.customTemplate = config_json.lib[platform].template;
                 }
-
                 events.emit('log', (cmd === 'add' ? 'Adding ' : 'Updating ') + platform + ' project...');
                 var PlatformApi;
                 try {
@@ -252,28 +231,16 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 })
                 .then(function() {
                     var saveVersion = !spec || semver.validRange(spec, true);
-                    // var pkgJson;
-                    // var pkgJsonPath = path.join(projectRoot, 'package.json');
-                    // var modifiedPkgJson = false;
-                    // if(fs.existsSync(pkgJsonPath)) {
-                    //     delete require.cache[require.resolve(pkgJsonPath)]; 
-                    //     pkgJson = require(pkgJsonPath);
-                    // } 
                     // Save platform@spec into platforms.json, where 'spec' is a version or a soure location. If a
                     // source location was specified, we always save that. Otherwise we save the version that was
                     // actually installed.
                     var versionToSave = saveVersion ? platDetails.version : spec;
-                    // var pkgJsonSpec = 'cordova-'+platform;
-                    // if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[pkgJsonSpec]) {
-                    //         // Use the spec from package.json.
-                    // }
                     events.emit('verbose', 'Saving ' + platform + '@' + versionToSave + ' into platforms.json');
                     platformMetadata.save(projectRoot, platform, versionToSave);
 
                     if(opts.save || autosave){
                         // Similarly here, we save the source location if that was specified, otherwise the version that
                         // was installed. However, we save it with the "~" attribute (this allows for patch updates).
-                        // spec = saveVersion ? '~' + platDetails.version : spec;
                         if (spec === undefined) {
                             spec = saveVersion ? '~' + platDetails.version : spec;
                         }
@@ -284,19 +251,16 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         cfg.addEngine(platform, spec);
                         cfg.write();
                         
-                        //save to add to package.json's cordova.platforms array in the next then
+                        // Save to add to package.json's cordova.platforms array in the next then.
                         platformsToSave.push(platform);
                         var pkgJsonSpec = 'cordova-'+platform;
                          if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[pkgJsonSpec]) {
                              spec = pkgJson.dependencies[pkgJsonSpec];
-                             //fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                          } else if(pkgJson.dependencies && !pkgJson.dependencies[pkgJsonSpec]) {
                              var engines = cfg.getEngines(projectRoot);
-                             configPlatforms = engines.map(function(engine) {
-                                 var configPlatformName = engine.name;
+                             var configPlatforms = engines.map(function(engine) {
                                  spec = engine.spec;
                                  pkgJson.dependencies[pkgJsonSpec] = spec;
-                                 //fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                              });
                          }
                         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
@@ -311,7 +275,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 delete require.cache[require.resolve(pkgJsonPath)]; 
                 pkgJson = require(pkgJsonPath);
             }
-
             if (pkgJson === undefined) {
                 return;
             }
@@ -330,7 +293,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     } 
                 });
             }
-            //save to package.json
+            // Save to package.json.
             if (modifiedPkgJson === true) {
                 pkgJson.cordova.platforms = pkgJson.cordova.platforms.sort();
                 var pkgJsonSpec = 'cordova-'+platform;
@@ -433,7 +396,6 @@ function getPlatformDetailsFromDir(dir, platformIfKnown){
         var pkg = require(pkgPath);
 
         platform = platformFromName(pkg.name);
-        //version = pkg.version;
         if (spec) {
             var specNoPrefix;
             if(spec.charAt(0) === '^' || spec.charAt(0) === '~') {
@@ -506,10 +468,10 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                 events.emit('log', 'Removing platform ' + target + ' from config.xml file...');
                 cfg.removeEngine(platformName);
                 cfg.write();
-                // If package.json exists and contains a specified platform in cordova.platforms, it will be removed
+                // If package.json exists and contains a specified platform in cordova.platforms, it will be removed.
                 if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.platforms !== undefined) {
                     var index = pkgJson.cordova.platforms.indexOf(platformName);
-                    //Check if platform exists in platforms array
+                    //Check if platform exists in platforms array.
                     if (pkgJson.cordova.platforms !== undefined && index > -1) {
                         events.emit('log', 'Removing ' + platformName + ' from cordova.platforms array in package.json');
                         pkgJson.cordova.platforms.splice(index, 1);
@@ -517,25 +479,25 @@ function remove(hooksRunner, projectRoot, targets, opts) {
                     }
                 }
             });
-            //Write out new package.json if changes have been made
+            //Write out new package.json if changes have been made.
             if(modifiedPkgJson === true) {
                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
             }
         }
     }).then(function() {
-        // Remove targets from platforms.json
+        // Remove targets from platforms.json.
         targets.forEach(function(target) {
             events.emit('verbose', 'Removing platform ' + target + ' from platforms.json file...');
             platformMetadata.remove(projectRoot, target);
         });
     }).then(function() {
-        //Remove from node_modules if it exists and --fetch was used
+        //Remove from node_modules if it exists and --fetch was used.
         if(opts.fetch) {
             return promiseutil.Q_chainmap(targets, function(target) {
                 if(target in platforms) {
                     target = 'cordova-'+target;
                 }
-                //edits package.json
+                // Edits package.json.
                 return npmUninstall(target, projectRoot, opts);
             });
         }
