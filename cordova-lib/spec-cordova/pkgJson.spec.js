@@ -25,7 +25,7 @@ var helpers = require('./helpers'),
     cordova = require('../src/cordova/cordova');
 
 // This group of tests checks if plugins are added and removed as expected from package.json.
-xdescribe('plugin end-to-end', function() {
+describe('plugin end-to-end', function() {
     var pluginId = 'cordova-plugin-device';
     var tmpDir = helpers.tmpDir('plugin_test_pkgjson');
     var project = path.join(tmpDir, 'project');
@@ -225,7 +225,7 @@ xdescribe('plugin end-to-end', function() {
 });
 
 // This group of tests checks if platforms are added and removed as expected from package.json.
-xdescribe('platform end-to-end with --save', function () {
+describe('platform end-to-end with --save', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
     var results;
