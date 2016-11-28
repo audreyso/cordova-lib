@@ -96,7 +96,6 @@ module.exports = function plugin(command, targets, opts) {
                 opts.plugins.push(targets[i]);
             }
         }
-
         // Assume we don't need to run prepare by default
         var shouldRunPrepare = false;
 
@@ -144,7 +143,27 @@ module.exports = function plugin(command, targets, opts) {
 
                             return determinePluginTarget(projectRoot, cfg, target, fetchOptions)
                             .then(function(resolvedTarget) {
-                                target = resolvedTarget;
+                                var configSpec = getVersionFromConfigFile(target,cfg);
+                                var pkgJson;
+                                var pkgJsonPath = path.join(projectRoot, 'package.json');
+                                if(fs.existsSync(pkgJsonPath)) {
+                                    delete require.cache[require.resolve(pkgJsonPath)]; 
+                                    pkgJson = require(pkgJsonPath);
+                                }
+                                // Use version passed in.
+                                if(target === resolvedTarget) {
+                                    target = resolvedTarget;
+                                }
+                                // If no version passed in, use pkg.json version.
+                                else if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[target]) {
+                                    target = target+'@'+pkgJson.dependencies[target];
+                                // If no version passed in and no pkg.json version, use config.xml.
+                                } else if (configSpec && !pkgJson.dependencies[target]){
+                                    target = target+'@'+configSpec;
+                                // Use pinned version.
+                                } else {
+                                    target = resolvedTarget;
+                                }
                                 events.emit('verbose', 'Calling plugman.fetch on plugin "' + target + '"');
                                 return plugman.raw.fetch(target, pluginPath, fetchOptions);
                             })
@@ -208,6 +227,13 @@ module.exports = function plugin(command, targets, opts) {
                             .thenResolve(pluginInfo);
                         })
                         .then(function(pluginInfo){
+                            var pkgJson;
+                            var pkgJsonPath = path.join(projectRoot, 'package.json');
+                            var ver;
+                            if(fs.existsSync(pkgJsonPath)) {
+                                delete require.cache[require.resolve(pkgJsonPath)]; 
+                                pkgJson = require(pkgJsonPath);
+                            }
                             // save to config.xml
                             if(saveToConfigXmlOn(config_json, opts)){
                                 var src = parseSource(target, opts);
@@ -227,7 +253,6 @@ module.exports = function plugin(command, targets, opts) {
                                         attributes.spec = ver;
                                     }
                                 }
-
                                 xml = cordova_util.projectConfig(projectRoot);
                                 cfg = new ConfigParser(xml);
                                 cfg.removePlugin(pluginInfo.id);
