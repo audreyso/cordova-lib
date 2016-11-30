@@ -25,7 +25,7 @@ var helpers = require('./helpers'),
     cordova = require('../src/cordova/cordova');
 
 // This group of tests checks if plugins are added and removed as expected from package.json.
-xdescribe('plugin end-to-end', function() {
+describe('plugin end-to-end', function() {
     var pluginId = 'cordova-plugin-device';
     var tmpDir = helpers.tmpDir('plugin_test_pkgjson');
     var project = path.join(tmpDir, 'project');
@@ -225,7 +225,7 @@ xdescribe('plugin end-to-end', function() {
 });
 
 // This group of tests checks if platforms are added and removed as expected from package.json.
-xdescribe('platform end-to-end with --save', function () {
+describe('platform end-to-end with --save', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
     var results;
@@ -523,6 +523,10 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
             // No change to pkg.json platforms or spec for ios.
             expect(pkgJson.cordova.platforms).toEqual([iosPlatform]);
             expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-splashscreen' : '^3.2.2', 'cordova-ios' : '^4.2.1' });
+            // Require platformsFolderPath, ios and spec should be in there.
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            expect(platformsJson).toEqual({ ios : '4.2.1' });
             // Config.xml and ios/cordova/version check.
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -537,15 +541,15 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
                 iosVersion = require(iosDirectory);
                 expect(semver.satisfies(iosVersion.version, elem.spec)).toEqual(true);
                 expect(elem.spec).toEqual('^4.2.1');
+                // Check that config and platforms.json "satisfy".
+                expect(semver.satisfies(platformsJson['ios'], elem.spec)).toEqual(true);
             });
             // Config.xml added ios platform.
             expect(engNames).toEqual([ 'ios' ]);
             // Check that pkg.json and ios/cordova/version versions "satisfy" each other.
             expect(semver.satisfies(iosVersion.version, pkgJson.dependencies['cordova-ios'])).toEqual(true);
-            // Require platformsFolderPath, ios and spec should be in there.
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            expect(platformsJson).toEqual({ ios : '^4.2.1' });
+            // Check that pkg.json and platforms.json "satisfy".
+            expect(semver.satisfies(platformsJson['ios'], pkgJson.dependencies['cordova-ios'])).toEqual(true);
         }).then(function() {
             // Add splashscreen with --save --fetch.
             return cordova.raw.plugin('add', 'cordova-plugin-splashscreen', {'save':true, 'fetch':true});
@@ -579,8 +583,8 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
     },60000); 
 });
 
-// Test #021 : use basePkgJson16 as config.xml contains platform/spec and pkg.json does not.
-xdescribe('During add, if config.xml has a platform spec and pkg.json does not, use config.', function () {
+// Test #021 : use basePkgJson16 as config.xml contains platform/spec and plugin/spec pkg.json does not.
+describe('During add, if config.xml has a platform/plugin spec and pkg.json does not, use config.', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
     var results;
@@ -612,10 +616,10 @@ xdescribe('During add, if config.xml has a platform spec and pkg.json does not, 
         });
     }
 
-    /** Test#021 will check that pkg.json, config.xml, platforms.json, and cordova platform ls
-    *   are updated with the correct spec from config.xml.
+    /** Test#021 during add, this test will check that pkg.json, config.xml, platforms.json, 
+    *   and cordova platform ls are updated with the correct platform/plugin spec from config.xml.
     */
-    it('Test#021 : During add, if config.xml has a spec, use that one.', function(done) {
+    it('Test#021 : If config.xml has a spec (and none was specified and pkg.json does not have one), use config.', function(done) {
         var iosPlatform = 'ios';
         var iosVersion;
         var cwd = process.cwd();
@@ -630,9 +634,14 @@ xdescribe('During add, if config.xml has a platform spec and pkg.json does not, 
         var engines = cfg.getEngines();
         var engNames;
         var engSpec;
+        var configPlugins = cfg.getPluginIdList();
+        var configPlugin = cfg.getPlugin(configPlugins);
+        var fetchJsonDirectory = path.join(cwd, 'plugins/fetch.json');
+        var fetchJsonVersion;
+
         // Pkg.json does not have platform or spec yet.
-        expect(pkgJson.cordova).toBeUndefined();
-        expect(pkgJson.dependencies).toBeUndefined();
+        expect(pkgJson.cordova.platforms[iosPlatform]).toBeUndefined();
+        expect(pkgJson.dependencies['cordova-ios']).toBeUndefined();
         // Config.xml has no platforms yet.
         expect(engines.length).toEqual(1);
         expect(engines).toEqual([ { name: 'ios', spec: '~4.2.1' } ]);
@@ -645,6 +654,10 @@ xdescribe('During add, if config.xml has a platform spec and pkg.json does not, 
             pkgJson = require(pkgJsonPath);
             // pkg.json has new platform.
             expect(pkgJson.cordova.platforms).toEqual([iosPlatform]);
+            // Require platformsFolderPath, ios and spec should be in there.
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
+            expect(platformsJson).toEqual({ ios : '4.2.1' });
             // Config.xml and ios/cordova/version check.
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -659,13 +672,41 @@ xdescribe('During add, if config.xml has a platform spec and pkg.json does not, 
                 iosVersion = require(iosDirectory);
                 expect(semver.satisfies(iosVersion.version, elem.spec)).toEqual(true);
                 expect(elem.spec).toEqual('~4.2.1');
+                expect(semver.satisfies(platformsJson[iosPlatform], elem.spec)).toEqual(true);
             });
             // Config.xml has ios platform.
             expect(engNames).toEqual([ 'ios' ]);
-            // Require platformsFolderPath, ios and spec should be in there.
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
-            expect(platformsJson).toEqual({ ios : '~4.2.1' });
+        }).then(function() {
+            // Add splashscreen with --save --fetch.
+            return cordova.raw.plugin('add', 'cordova-plugin-splashscreen', {'save':true, 'fetch':true});
+        }).then(function() {
+            var cfg3 = new ConfigParser(configXmlPath);
+            // Check config.xml for plugins and spec.
+            configPlugins = cfg3.getPluginIdList();
+            configPlugin = cfg3.getPlugin(configPlugins);
+            expect(configPlugins.length).toEqual(1);
+            expect(configPlugin).toEqual({ name: 'cordova-plugin-splashscreen', spec: '~3.2.2', variables: {} });
+            // Check fetch.json for plugin spec. (plugins/fetch.json)
+            delete require.cache[require.resolve(fetchJsonDirectory)];
+            fetchJsonVersion = require(fetchJsonDirectory);
+            expect(fetchJsonVersion['cordova-plugin-splashscreen'].source.id).toEqual('cordova-plugin-splashscreen@~3.2.2');
+            var fetchJsonString = fetchJsonVersion['cordova-plugin-splashscreen'].source.id;
+            // Get the spec.
+            var fetchJsonSpec;
+            if(fetchJsonString.indexOf('^') > -1) {
+                fetchJsonSpec = fetchJsonString.split('^');
+            }   else if(fetchJsonString.indexOf('~') > -1) {
+                fetchJsonSpec = fetchJsonString.split('~');
+            } else {
+                fetchJsonSpec = fetchJsonString.split('@');
+            }
+            // Check that version in fetch.json and config version "satisfy" each other.
+            expect(semver.satisfies(fetchJsonSpec[1], configPlugin.spec)).toEqual(true);
+            // Delete any previous caches of require(package.json).
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // Splashscreen plugin added to pkg.json.
+            expect(pkgJson.cordova.plugins['cordova-plugin-splashscreen']).toBeDefined();
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -674,8 +715,8 @@ xdescribe('During add, if config.xml has a platform spec and pkg.json does not, 
 });
 
 // Test #022 : use basePkgJson17 (config.xml and pkg.json each have ios platform with different specs).
-xdescribe('During add, if add specifies a platform spec, use that one regardless of what is in pkg.json or config.xml', function () {
-var tmpDir = helpers.tmpDir('platform_test_pkgjson');
+describe('During add, if add specifies a platform spec, use that one regardless of what is in pkg.json or config.xml', function () {
+    var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
     var results;
 
@@ -722,9 +763,14 @@ var tmpDir = helpers.tmpDir('platform_test_pkgjson');
         var engines = cfg.getEngines();
         var engNames;
         var engSpec;
+        var configPlugins = cfg.getPluginIdList();
+        var configPlugin = cfg.getPlugin(configPlugins);
+        var fetchJsonDirectory = path.join(cwd, 'plugins/fetch.json');
+        var fetchJsonVersion;
+
         // Pkg.json has ios and spec '^4.2.1'.
         expect(pkgJson.cordova.platforms).toEqual([ iosPlatform ]);
-        expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '^4.2.1' });
+        expect(pkgJson.dependencies).toEqual({ 'cordova-ios' : '^4.2.1', 'cordova-plugin-splashscreen' : '~3.2.2' });
         // Config.xml has ios and spec ~4.2.1.
         expect(engines.length).toEqual(1);
         expect(engines).toEqual([ { name: 'ios', spec: '~4.2.1' } ]);
@@ -737,7 +783,7 @@ var tmpDir = helpers.tmpDir('platform_test_pkgjson');
             pkgJson = require(pkgJsonPath);
             // Pkg.json has ios.
             expect(pkgJson.cordova.platforms).toEqual([iosPlatform]);
-            expect(pkgJson.dependencies).toEqual({ 'cordova-ios': '4.3.0' });
+            expect(pkgJson.dependencies).toEqual({ 'cordova-ios' : '^4.3.0', 'cordova-plugin-splashscreen' : '~3.2.2' });
             // Config.xml and ios/cordova/version check.
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -748,17 +794,57 @@ var tmpDir = helpers.tmpDir('platform_test_pkgjson');
             });
             // Config.xml has ios platform.
             expect(engNames).toEqual([ 'ios' ]);
+            // delete previous caches of iosVersion;
+            delete require.cache[require.resolve(iosDirectory)];
+            iosVersion = require(iosDirectory);
+            expect(semver.satisfies(iosVersion.version, pkgJson.dependencies['cordova-ios']));
             engSpec = engines.map(function(elem) {
                 // Check that config and ios/cordova/version versions "satify" each other.
-                delete require.cache[require.resolve(iosDirectory)];
-                iosVersion = require(iosDirectory);
-                expect(iosVersion.version).toEqual(elem.spec);
-                expect(elem.spec).toEqual('4.3.0');
+                expect(semver.satisfies(iosVersion.version, elem.spec)).toEqual(true);
+                expect(elem.spec).toEqual('~4.3.0');
             });
             // Require platformsFolderPath, ios and spec should be in there.
             delete require.cache[require.resolve(platformsFolderPath)];
             platformsJson = require(platformsFolderPath);
             expect(platformsJson).toEqual({ ios : '4.3.0' });
+            // Check on plugins in (plugins/fetch.json)
+            delete require.cache[require.resolve(fetchJsonDirectory)];
+            fetchJsonVersion = require(fetchJsonDirectory);
+            expect(fetchJsonVersion['cordova-plugin-splashscreen'].source.id).toEqual('cordova-plugin-splashscreen@~3.2.2');
+        }).then(function() {
+            // Remove without save. (for testing purposes).
+            return cordova.raw.plugin('rm', 'cordova-plugin-splashscreen');
+        }).then(function() {
+            // Add splashscreen with --save --fetch.
+            return cordova.raw.plugin('add', 'cordova-plugin-splashscreen@4.0.0', {'save':true, 'fetch':true});
+        }).then(function() {
+            var cfg3 = new ConfigParser(configXmlPath);
+            // Check config.xml for plugins and spec.
+            configPlugins = cfg3.getPluginIdList();
+            configPlugin = cfg3.getPlugin(configPlugins);
+            expect(configPlugins.length).toEqual(1);
+            delete require.cache[require.resolve(fetchJsonDirectory)];
+            fetchJsonVersion = require(fetchJsonDirectory);
+            expect(configPlugin).toEqual({ name: 'cordova-plugin-splashscreen', spec: '~4.0.0', variables: {} });
+            var fetchJsonString = fetchJsonVersion['cordova-plugin-splashscreen'].source.id;
+            // Get the spec.
+            var fetchJsonSpec;
+            if(fetchJsonString.indexOf('^') > -1) {
+                fetchJsonSpec = fetchJsonString.split('^');
+            }   else if(fetchJsonString.indexOf('~') > -1) {
+                fetchJsonSpec = fetchJsonString.split('~');
+            } else {
+                fetchJsonSpec = fetchJsonString.split('@');
+            }
+            // Check that config.xml and fetch.json versions "satisfy".
+            expect(semver.satisfies(fetchJsonSpec[1],configPlugin.spec));
+            // Delete any previous caches of require(package.json).
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // New splashscreen spec added to pkg.json.
+            expect(pkgJson.dependencies['cordova-plugin-splashscreen']).toEqual('^4.0.0');
+            // Check that pkg.json and fetch.json versions "satisfy".
+            expect(semver.satisfies(fetchJsonSpec[1], pkgJson.dependencies['cordova-ios']));
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);

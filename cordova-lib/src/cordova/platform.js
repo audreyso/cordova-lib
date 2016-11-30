@@ -99,7 +99,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 pkgJson = require(pkgJsonPath);
             }
             return Q.when().then(function() {
-                var pkgJsonSpec = 'cordova-'+platform;
+                var prefixCordovaPlatform = 'cordova-'+platform;
                 if (!(platform in platforms)) {
                     spec = platform;
                     platform = null;
@@ -110,15 +110,25 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 if(platform === 'wp8') {
                     events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
                 }
-                if(spec && pkgJson) {
-                    pkgJson.dependencies[pkgJsonSpec] = spec;
+                // If there is a spec specified during add, add to pkg.json dependencies(if exists).
+                if (spec && pkgJson && pkgJson.dependencies) {
+                    if (pkgJson.dependencies[prefixCordovaPlatform]) {
+                        pkgJson.dependencies[prefixCordovaPlatform] = '^'+spec;
+                    } else if (pkgJson.dependencies[platform]) {
+                        pkgJson.dependencies[platform] = '^'+spec;
+                    }
+                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                 }
                 // If there is no spec specified during add, use the one from pkg.json.
-                if(spec === undefined && pkgJson && pkgJson.dependencies && pkgJson.dependencies[pkgJsonSpec]) {
-                    spec = pkgJson.dependencies[pkgJsonSpec];
+                if (spec === undefined && pkgJson && pkgJson.dependencies) {
+                    if (pkgJson.dependencies[prefixCordovaPlatform]) {
+                        spec = pkgJson.dependencies[prefixCordovaPlatform];
+                    } else if (pkgJson.dependencies[platform]) {
+                        spec = pkgJson.dependencies[platform];
+                    }
                 }
                 // If there is no spec in pkg.json, use config.xml.
-                if (platform && !spec && cmd == 'add' && !pkgJson || pkgJson && !pkgJson.dependencies || !pkgJson.dependencies[pkgJsonSpec]) {
+                if (platform && !spec && cmd == 'add') {
                     events.emit('verbose', 'No version supplied. Retrieving version from config.xml...');
                     spec = getVersionFromConfigFile(platform, cfg);
                 }  
@@ -162,9 +172,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                           '.\nUse \'cordova platform add ' +
                           platform + '@latest\' to add the latest published version instead.';
                     events.emit('warn', msg);
-                }
-                if(spec) {
-                    platDetails.version = spec;
                 }
 
                 var options = {
@@ -241,7 +248,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     if(opts.save || autosave){
                         // Similarly here, we save the source location if that was specified, otherwise the version that
                         // was installed. However, we save it with the "~" attribute (this allows for patch updates).
-                        if (spec === undefined) {
+                        if (spec.charAt(0) !== '~' && spec.charAt(0) !== '^') {
                             spec = saveVersion ? '~' + platDetails.version : spec;
                         }
                         // Save target into config.xml, overriding already existing settings
@@ -253,16 +260,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         
                         // Save to add to package.json's cordova.platforms array in the next then.
                         platformsToSave.push(platform);
-                        var pkgJsonSpec = 'cordova-'+platform;
-                         if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[pkgJsonSpec]) {
-                             spec = pkgJson.dependencies[pkgJsonSpec];
-                         } else if(pkgJson.dependencies && !pkgJson.dependencies[pkgJsonSpec]) {
-                             var engines = cfg.getEngines(projectRoot);
-                             var configPlatforms = engines.map(function(engine) {
-                                 spec = engine.spec;
-                                 pkgJson.dependencies[pkgJsonSpec] = spec;
-                             });
-                         }
                         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                     }
                 });
@@ -296,10 +293,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             // Save to package.json.
             if (modifiedPkgJson === true) {
                 pkgJson.cordova.platforms = pkgJson.cordova.platforms.sort();
-                var pkgJsonSpec = 'cordova-'+platform;
-                if(pkgJson.dependencies && pkgJson.dependencies[pkgJsonSpec]) {
-                    spec = pkgJson.dependencies[pkgJsonSpec];
-                }
                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
             }
         });

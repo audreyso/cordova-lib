@@ -12,4 +12,5 @@
     <preference name="fullscreen" value="true" />
     <preference name="webviewbounce" value="true" />
     <engine name="ios" spec="~4.2.1"/>
+    <plugin name="cordova-plugin-splashscreen" spec="~3.2.1" />
 </widget>
