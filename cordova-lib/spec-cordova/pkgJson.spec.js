@@ -51,7 +51,7 @@ describe('plugin end-to-end', function() {
         shell.rm('-rf', tmpDir);
     });
 
-    xit('Test#001 : should successfully add and remove a plugin with save and correct spec', function(done) {
+    it('Test#001 : should successfully add and remove a plugin with save and correct spec', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson = require(pkgJsonPath);
         var cwd = process.cwd();
@@ -98,7 +98,7 @@ describe('plugin end-to-end', function() {
         }).fin(done);
     });
 
-    xit('Test#002 : should NOT add a plugin to package.json if --save is not used', function(done) {
+    it('Test#002 : should NOT add a plugin to package.json if --save is not used', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
 
@@ -123,7 +123,7 @@ describe('plugin end-to-end', function() {
         }).fin(done);
     });
 
-    xit('Test#003 : should NOT remove plugin from package.json if there is no --save', function(done) {
+    it('Test#003 : should NOT remove plugin from package.json if there is no --save', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
         
@@ -153,7 +153,7 @@ describe('plugin end-to-end', function() {
         }).fin(done);
     });
 
-    xit('Test#004 : should successfully add and remove a plugin with variables and save to package.json', function(done) {
+    it('Test#004 : should successfully add and remove a plugin with variables and save to package.json', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
         var someKey = 'someKey';
@@ -184,7 +184,7 @@ describe('plugin end-to-end', function() {
             expect(err).toBeUndefined();
         }).fin(done);
     });
-    xit('Test#005 : should successfully add and remove multiple plugins with save & fetch', function(done) {
+    it('Test#005 : should successfully add and remove multiple plugins with save & fetch', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
         // Delete any previous caches of require(package.json).
@@ -306,7 +306,7 @@ describe('plugin end-to-end', function() {
 });
 
 // This group of tests checks if platforms are added and removed as expected from package.json.
-xdescribe('platform end-to-end with --save', function () {
+describe('platform end-to-end with --save', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
     var results;
@@ -861,6 +861,7 @@ describe('During add, if add specifies a platform spec, use that one regardless 
             var cfg3 = new ConfigParser(configXmlPath);
             // Check config.xml for plugins and spec.
             configPlugins = cfg3.getPluginIdList();
+
             configPlugin = cfg3.getPlugin(configPlugins);
             // Delete previous caches of pluginPkgJson.
             delete require.cache[require.resolve(pluginPkgJsonDir)];
