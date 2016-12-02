@@ -40,7 +40,6 @@ var config            = require('./config'),
     npmUninstall      = require('cordova-fetch').uninstall,
     platformMetadata  = require('./platform_metadata');
 
-var spec;
 // Expose the platform parsers on top of this command
 for (var p in platforms) {
     module.exports[p] = platforms[p];
@@ -91,7 +90,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             // For each platform, download it and call its helper script.
             var parts = target.split('@');
             var platform = parts[0];
-            spec = parts[1];
+            var spec = parts[1];
             var pkgJson;
             var pkgJsonPath = path.join(projectRoot, 'package.json');
             if(fs.existsSync(pkgJsonPath)) {
@@ -110,15 +109,21 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 if(platform === 'wp8') {
                     events.emit('warn', 'wp8 has been deprecated. Please use windows instead.');
                 }
-                // If there is a spec specified during add, add to pkg.json dependencies(if exists).
-                if (spec && pkgJson && pkgJson.dependencies) {
-                    if (pkgJson.dependencies[prefixCordovaPlatform]) {
-                        pkgJson.dependencies[prefixCordovaPlatform] = '^'+spec;
-                    } else if (pkgJson.dependencies[platform]) {
-                        pkgJson.dependencies[platform] = '^'+spec;
+                // Instead of always writing to package.json like you do below, 
+                // If pkgJson.dependencies[prefixCordovaPlatform] or pkgJson.dependencies[platform] exist and semver satisfy the passed in spec. 
+                // If they do exist and satisfy fails, then write to package.json
+                if(spec && pkgJson && pkgJson.dependencies && (pkgJson.dependencies[prefixCordovaPlatform] || pkgJson.dependencies[platform])) {
+                    if ((semver.satisfies(spec, pkgJson.dependencies[prefixCordovaPlatform])) || (semver.satisfies(spec, pkgJson.dependencies[platform]))) {
+                    } else {
+                        if (pkgJson.dependencies[prefixCordovaPlatform]) {
+                            pkgJson.dependencies[prefixCordovaPlatform] = '^'+spec;
+                        } else if (pkgJson.dependencies[platform]) {
+                            pkgJson.dependencies[platform] = '^'+spec;
+                        }
+                        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                     }
-                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                 }
+
                 // If there is no spec specified during add, use the one from pkg.json.
                 if (spec === undefined && pkgJson && pkgJson.dependencies) {
                     if (pkgJson.dependencies[prefixCordovaPlatform]) {
@@ -379,27 +384,15 @@ function platformFromName(name) {
 // Returns a Promise
 // Gets platform details from a directory
 function getPlatformDetailsFromDir(dir, platformIfKnown){
-    var libDir = path.resolve(dir);
-    var platform;
-    var version;
+   var libDir = path.resolve(dir);
+   var platform;
+   var version;
 
-    try {
-        var pkgPath = path.join(libDir, 'package.json');
-        delete require.cache[pkgPath];
-        var pkg = require(pkgPath);
-
-        platform = platformFromName(pkg.name);
-        if (spec) {
-            var specNoPrefix;
-            if(spec.charAt(0) === '^' || spec.charAt(0) === '~') {
-                specNoPrefix = spec.slice(1);
-            }
-            version = specNoPrefix || spec;
-            libDir = libDir.replace(pkg.version, specNoPrefix);
-        } else {
-            version = pkg.version;
-        }
-    } catch(e) {
+   try {
+       var pkg = require(path.join(libDir, 'package'));
+       platform = platformFromName(pkg.name);
+       version = pkg.version;
+   } catch(e) {
         // Older platforms didn't have package.json.
         platform = platformIfKnown || platformFromName(path.basename(dir));
         var verFile = fs.existsSync(path.join(libDir, 'VERSION')) ? path.join(libDir, 'VERSION') :
