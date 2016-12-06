@@ -265,11 +265,28 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         
                         // Save to add to package.json's cordova.platforms array in the next then.
                         platformsToSave.push(platform);
-                        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                        if(pkgJson) {
+                            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                        }
                     }
+                    
+                    if(opts.fetch && opts.save && pkgJson) {
+                        var prefixCordovaPlatform = 'cordova-'+platform;
+                            if (!pkgJson.dependencies) {
+                                pkgJson.dependencies = {};
+                            }
+                            if (pkgJson.dependencies[prefixCordovaPlatform] && 
+                            pkgJson.dependencies[prefixCordovaPlatform] !== spec) {
+                                pkgJson.dependencies[prefixCordovaPlatform] = spec;
+                            } else {
+                                pkgJson.dependencies[prefixCordovaPlatform] = spec;
+                            }
+                        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                    };
+                    events.emit('log', 'Saving ' + platform + '@' + spec + ' into pkg.json file ...');
                 });
             });
-        }).then(function() {
+        }).then(function() { 
             var pkgJson;
             var pkgJsonPath = path.join(projectRoot, 'package.json');
             var modifiedPkgJson = false;
