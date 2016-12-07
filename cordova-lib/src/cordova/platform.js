@@ -270,20 +270,15 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         }
                     }
                     
-                    if(opts.fetch && opts.save && pkgJson) {
-                        var prefixCordovaPlatform = 'cordova-'+platform;
-                            if (!pkgJson.dependencies) {
-                                pkgJson.dependencies = {};
-                            }
-                            if (pkgJson.dependencies[prefixCordovaPlatform] && 
-                            pkgJson.dependencies[prefixCordovaPlatform] !== spec) {
-                                pkgJson.dependencies[prefixCordovaPlatform] = spec;
-                            } else {
-                                pkgJson.dependencies[prefixCordovaPlatform] = spec;
-                            }
+                    // If local path is passed in with --save --fetch, add it to pkg.json. 
+                    if(opts.fetch && opts.save && pkgJson && fs.existsSync(spec)) {
+                        return fetch(spec, projectRoot, opts)
+                        .then(function (directory) {
+                            return getPlatformDetailsFromDir(directory,platform)
+                        });
                         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
-                    };
-                    events.emit('log', 'Saving ' + platform + '@' + spec + ' into pkg.json file ...');
+                    }
+                    events.emit('log', 'Saving ' + platform + '@' + spec + ' into pkg.json file ...'); 
                 });
             });
         }).then(function() { 

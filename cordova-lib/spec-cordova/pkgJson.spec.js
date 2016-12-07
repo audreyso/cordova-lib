@@ -222,7 +222,7 @@ describe('plugin end-to-end', function() {
             expect(err).toBeUndefined();
         }).fin(done);
     });
-    // Test #023 : if pkg.json and config.xml have no platforms/plugins/spec
+    // Test #023 : if pkg.json and config.xml have no platforms/plugins/spec.
     // and --save --fetch is called, use the pinned version or plugin pkg.json version.
     it('Test#023 : use pinned/lastest version if there is no platform/plugin version passed in and no platform/plugin versions in pkg.json or config.xml', function(done) {
         var iosPlatform = 'ios';
@@ -296,16 +296,14 @@ describe('plugin end-to-end', function() {
     // Cordova prepare needs extra wait time to complete.
     },60000);
     
-    // Test#025: has a pkg.json. Checks if local path is added to pkg.json.
-    // A project has a pkg.json.
-    // Run cordova platform add localPath --save --fetch.
-    // Expect that ios has been added to pkgJson.cordova.platforms.
-    // Expect that local path is added as a spec to pkgJson.dependencies.
-    it('Test#025 : if you add a platform with local path, pkg.json gets updated', function (done) {
+    // Test#025: has a pkg.json. Checks if local path is added to pkg.json for platform and plugin add.
+    it('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function (done) {
         var cwd = process.cwd();
         var pkgJsonPath = path.join(cwd,'package.json');
         var pkgJson;
         delete require.cache[require.resolve(pkgJsonPath)];
+
+        // Run cordova platform add local path --save --fetch.
         return cordova.raw.platform('add', '/Users/auso/cordova/cordova-ios', {'save':true, 'fetch':true})
         .then(function() {
             // Delete any previous caches of require(package.json).
@@ -313,7 +311,19 @@ describe('plugin end-to-end', function() {
             pkgJson = require(pkgJsonPath);
             // Pkg.json has ios.
             expect(pkgJson.cordova.platforms).toEqual(['ios']);
-            expect(pkgJson.dependencies['cordova-ios']).toEqual('/Users/auso/cordova/cordova-ios');
+            // Pkg.json has platform local path spec.
+            expect(pkgJson.dependencies['cordova-ios']).toEqual('file:///Users/auso/cordova/cordova-ios');
+        }).then(function() {
+            // Run cordova plugin add local path --save --fetch.
+            return cordova.raw.plugin('add', '/Users/auso/cordova/cordova-plugin-geolocation', {'save':true, 'fetch':true})
+        }).then(function() {
+            // Delete any previous caches of require(package.json).
+            delete require.cache[require.resolve(pkgJsonPath)];
+            pkgJson = require(pkgJsonPath);
+            // Pkg.json has geolocation plugin.
+            expect(pkgJson.cordova.plugins['cordova-plugin-geolocation']).toBeDefined();
+            // Pkg.json has plugin local path spec.
+            expect(pkgJson.dependencies['cordova-plugin-geolocation']).toEqual('/Users/auso/cordova/cordova-plugin-geolocation');
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -469,6 +479,7 @@ describe('platform end-to-end with --save', function () {
         })
         .fin(done);
     }, 30000);
+    
     it('Test#010 : two platforms are added and removed correctly with --save --fetch', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         expect(pkgJsonPath).toExist();
@@ -899,10 +910,6 @@ describe('local path is added to config.xml without pkg.json', function () {
     });
 
     // Test#026: has NO pkg.json. Checks if local path is added to config.xml and has no errors.
-    // A project has NOT pkg.json.
-    // Run cordova platform add localPath --save --fetch.
-    // Expect that ios has been added to config.xml.
-    // Expect that local path is added as a spec to config.xml.
     it('Test#026 : if you add a platform with local path, pkg.json gets updated', function (done) {
         var cwd = process.cwd();
         var platformsFolderPath = path.join(cwd,'cordova-ios');
@@ -911,7 +918,10 @@ describe('local path is added to config.xml without pkg.json', function () {
         var engines = cfg.getEngines();
         var engNames;
         var engSpec;
+        var configPlugins = cfg.getPluginIdList();
+        var configPlugin = cfg.getPlugin(configPlugins);
         
+        // Run platform add with local path.
         return cordova.raw.platform('add', '/Users/auso/cordova/cordova-ios', {'save':true, 'fetch':true})
         .then(function() {
             var cfg2 = new ConfigParser(configXmlPath);
@@ -929,5 +939,31 @@ describe('local path is added to config.xml without pkg.json', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     },60000);
+
+    // Test#027: has NO pkg.json. Checks if local path is added to config.xml and has no errors.
+    it('Test#027 : if you add a plugin with local path, pkg.json gets updated', function (done) {
+        var cwd = process.cwd();
+        var platformsFolderPath = path.join(cwd,'cordova-ios');
+        var configXmlPath = path.join(cwd, 'config.xml');
+        var cfg = new ConfigParser(configXmlPath);
+        var configPlugins = cfg.getPluginIdList();
+        var configPlugin = cfg.getPlugin(configPlugins);
+
+        // Run platform add with local path.
+        return cordova.raw.plugin('add', '/Users/auso/cordova/cordova-plugin-geolocation', {'save':true, 'fetch':true})
+        .then(function() {
+            var cfg2 = new ConfigParser(configXmlPath);
+            // Check config.xml for plugins and spec.
+            configPlugins = cfg2.getPluginIdList();
+            configPlugin = cfg2.getPlugin(configPlugins[1]);
+            // Plugin is added.
+            expect(configPlugin.name).toEqual('cordova-plugin-geolocation');
+            // Spec for geolocation plugin is added.
+            expect(configPlugin.spec).toEqual('/Users/auso/cordova/cordova-plugin-geolocation');
+        }).fail(function(err) {
+            expect(err).toBeUndefined();
+        }).fin(done);
+    },60000);
 });
+
 

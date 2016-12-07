@@ -254,6 +254,12 @@ module.exports = function plugin(command, targets, opts) {
                                 // Plugin and variables are added.
                                 pkgJson.cordova.plugins[pluginInfo.id] = opts.cli_variables;
 
+                                // When adding a (plugin) local path with --fetch --save, it will get added
+                                // to package.json in package.json dependencies.
+                                if(opts.fetch && opts.save && pkgJson && fs.existsSync(attributes.spec)) {
+                                    pkgJson.dependencies[pluginInfo.id] = attributes.spec;
+                                }
+                                
                                 events.emit('log','Adding '+pluginInfo.id+ ' to package.json');
                                 // Write to package.json
                                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
