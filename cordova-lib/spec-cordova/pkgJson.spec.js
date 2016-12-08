@@ -30,6 +30,7 @@ describe('plugin end-to-end', function() {
     var tmpDir = helpers.tmpDir('plugin_test_pkgjson');
     var project = path.join(tmpDir, 'project');
     var results;
+    var testRunRoot = process.cwd();
 
     events.on('results', function(res) { results = res; });
 
@@ -299,6 +300,7 @@ describe('plugin end-to-end', function() {
     // Test#025: has a pkg.json. Checks if local path is added to pkg.json for platform and plugin add.
     it('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function (done) {
         var cwd = process.cwd();
+        var pluginPath = path.join(testRunRoot,"spec-cordova/fixtures/plugins/fake1");
         var pkgJsonPath = path.join(cwd,'package.json');
         var pkgJson;
         delete require.cache[require.resolve(pkgJsonPath)];
@@ -315,15 +317,15 @@ describe('plugin end-to-end', function() {
             expect(pkgJson.dependencies['cordova-ios']).toEqual('file:///Users/auso/cordova/cordova-ios');
         }).then(function() {
             // Run cordova plugin add local path --save --fetch.
-            return cordova.raw.plugin('add', '/Users/auso/cordova/cordova-plugin-geolocation', {'save':true, 'fetch':true})
+            return cordova.raw.plugin('add', pluginPath, {'save':true, 'fetch':true})
         }).then(function() {
             // Delete any previous caches of require(package.json).
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             // Pkg.json has geolocation plugin.
-            expect(pkgJson.cordova.plugins['cordova-plugin-geolocation']).toBeDefined();
+            expect(pkgJson.cordova.plugins['org.apache.cordova.fakeplugin1']).toBeDefined();
             // Pkg.json has plugin local path spec.
-            expect(pkgJson.dependencies['cordova-plugin-geolocation']).toEqual('/Users/auso/cordova/cordova-plugin-geolocation');
+            expect(pkgJson.dependencies['org.apache.cordova.fakeplugin1'].includes(pluginPath)).toEqual(true);
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -479,7 +481,7 @@ describe('platform end-to-end with --save', function () {
         })
         .fin(done);
     }, 30000);
-    
+
     it('Test#010 : two platforms are added and removed correctly with --save --fetch', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         expect(pkgJsonPath).toExist();
@@ -892,6 +894,8 @@ describe('local path is added to config.xml without pkg.json', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
     var results;
+    var testRunRoot = process.cwd();
+
 
     beforeEach(function() {
         shell.rm('-rf', tmpDir);
@@ -920,6 +924,7 @@ describe('local path is added to config.xml without pkg.json', function () {
         var engSpec;
         var configPlugins = cfg.getPluginIdList();
         var configPlugin = cfg.getPlugin(configPlugins);
+        var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/android');
         
         // Run platform add with local path.
         return cordova.raw.platform('add', '/Users/auso/cordova/cordova-ios', {'save':true, 'fetch':true})
@@ -943,6 +948,7 @@ describe('local path is added to config.xml without pkg.json', function () {
     // Test#027: has NO pkg.json. Checks if local path is added to config.xml and has no errors.
     it('Test#027 : if you add a plugin with local path, pkg.json gets updated', function (done) {
         var cwd = process.cwd();
+        var pluginPath = path.join(testRunRoot,"spec-cordova/fixtures/plugins/fake1");
         var platformsFolderPath = path.join(cwd,'cordova-ios');
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg = new ConfigParser(configXmlPath);
@@ -950,16 +956,16 @@ describe('local path is added to config.xml without pkg.json', function () {
         var configPlugin = cfg.getPlugin(configPlugins);
 
         // Run platform add with local path.
-        return cordova.raw.plugin('add', '/Users/auso/cordova/cordova-plugin-geolocation', {'save':true, 'fetch':true})
+        return cordova.raw.plugin('add', pluginPath, {'save':true, 'fetch':true})
         .then(function() {
             var cfg2 = new ConfigParser(configXmlPath);
             // Check config.xml for plugins and spec.
             configPlugins = cfg2.getPluginIdList();
             configPlugin = cfg2.getPlugin(configPlugins[1]);
             // Plugin is added.
-            expect(configPlugin.name).toEqual('cordova-plugin-geolocation');
+            expect(configPlugin.name).toEqual('org.apache.cordova.fakeplugin1');
             // Spec for geolocation plugin is added.
-            expect(configPlugin.spec).toEqual('/Users/auso/cordova/cordova-plugin-geolocation');
+            expect(configPlugin.spec.includes(pluginPath)).toEqual(true);
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
