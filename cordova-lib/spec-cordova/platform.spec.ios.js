@@ -25,7 +25,6 @@ var helpers = require('./helpers'),
 
 
 describe('cocoapod plugin add and rm end-to-end', function () {
-
     var tmpDir = helpers.tmpDir('cocoapod_plugin_test');
     var project = path.join(tmpDir, 'hello4');
 
@@ -79,7 +78,6 @@ describe('cocoapod plugin add and rm end-to-end', function () {
 
             var podsJSONContent = require(podsJSON);
             expect(podsJSONContent[AFNetworking] !== null);
-
             return cordova.raw.plugin('add', overlappingDependencyPlugin);
         })
         .then(function() {

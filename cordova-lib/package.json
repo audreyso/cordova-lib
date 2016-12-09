@@ -20,8 +20,8 @@
   "dependencies": {
     "aliasify": "^1.7.2",
     "cordova-common": "1.5.x",
-    "cordova-fetch": "^1.0.1",
     "cordova-create": "^1.0.1",
+    "cordova-fetch": "^1.0.1",
     "cordova-js": "4.2.0",
     "cordova-registry-mapper": "1.x",
     "cordova-serve": "^1.0.0",
@@ -29,6 +29,7 @@
     "elementtree": "0.1.6",
     "glob": "^5.0.3",
     "init-package-json": "^1.2.0",
+    "jasmine": "^2.5.2",
     "nopt": "^3.0.6",
     "npm": "^2.10.x",
     "opener": "1.4.1",

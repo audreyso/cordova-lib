@@ -22,6 +22,7 @@ var helpers = require('./helpers'),
     events = require('cordova-common').events,
     ConfigParser = require('cordova-common').ConfigParser,
     semver  = require('semver'),
+    fs = require('fs'),
     cordova = require('../src/cordova/cordova');
 
 // This group of tests checks if plugins are added and removed as expected from package.json.
@@ -64,7 +65,7 @@ describe('plugin end-to-end', function() {
         // No plugins in config or pkg.json yet.
         expect(configPlugins.length).toEqual(0);
         expect(pkgJson.cordova).toBeUndefined();
-        expect(pkgJsonPath).toExist();
+        expect(fs.existsSync(pkgJsonPath)).toEqual(true);
 
         // Add the plugin with --save.
         return cordova.raw.plugin('add', pluginId+'@1.1.2', {'save':true, 'fetch':true})
@@ -103,7 +104,7 @@ describe('plugin end-to-end', function() {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
 
-        expect(pkgJsonPath).toExist();
+        expect(fs.existsSync(pkgJsonPath)).toEqual(true);
 
         // Add the camera plugin with --save.
         return cordova.raw.plugin('add', 'cordova-plugin-camera', {'save':true})
@@ -128,7 +129,7 @@ describe('plugin end-to-end', function() {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
         
-        expect(pkgJsonPath).toExist();
+        expect(fs.existsSync(pkgJsonPath)).toEqual(true);
 
         // Add the plugin with --save.
         return cordova.raw.plugin('add', pluginId, {'save':true})
@@ -159,7 +160,7 @@ describe('plugin end-to-end', function() {
         var pkgJson;
         var someKey = 'someKey';
 
-        expect(pkgJsonPath).toExist();
+        expect(fs.existsSync(pkgJsonPath)).toEqual(true);
 
         // Add the plugin with --save.
         return cordova.raw.plugin('add', pluginId, {'save':true, 'cli_variables': {'someKey':'someValue'}})
@@ -192,7 +193,7 @@ describe('plugin end-to-end', function() {
         delete require.cache[require.resolve(pkgJsonPath)];
         pkgJson = require(pkgJsonPath);
     
-        expect(pkgJsonPath).toExist();
+        expect(fs.existsSync(pkgJsonPath)).toEqual(true);
 
         // Add the plugin with --save.
         return cordova.raw.plugin('add', [pluginId,'cordova-plugin-device-motion'], {'save':true, 'fetch':true})
@@ -374,7 +375,7 @@ describe('platform end-to-end with --save', function () {
 
     it('Test#006 : platform is added and removed correctly with --save', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
-        expect(pkgJsonPath).toExist();
+        expect(fs.existsSync(pkgJsonPath)).toEqual(true);
         var pkgJson;
 
         // Check there are no platforms yet.
@@ -403,7 +404,7 @@ describe('platform end-to-end with --save', function () {
 
     it('Test#007 : should not remove platforms from package.json when removing without --save', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
-        expect(pkgJsonPath).toExist();
+        expect(fs.existsSync(pkgJsonPath)).toEqual(true);
         delete require.cache[require.resolve(pkgJsonPath)];
         var pkgJson = require(pkgJsonPath);
         emptyPlatformList().then(function() {
@@ -434,7 +435,7 @@ describe('platform end-to-end with --save', function () {
     it('Test#008 : should not add platform to package.json when adding without --save', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
-        expect(pkgJsonPath).toExist();
+        expect(fs.existsSync(pkgJsonPath)).toEqual(true);
         // Delete any previous caches of require(package.json).
         delete require.cache[require.resolve(pkgJsonPath)];
         pkgJson = require(pkgJsonPath);
@@ -459,7 +460,7 @@ describe('platform end-to-end with --save', function () {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
         var pkgJson;
         var platformNotToAdd = 'ios';
-        expect(pkgJsonPath).toExist();
+        expect(fs.existsSync(pkgJsonPath)).toEqual(true);
 
         // Add a platform without --save.
         cordova.raw.platform('add',platformNotToAdd)
@@ -484,8 +485,8 @@ describe('platform end-to-end with --save', function () {
 
     it('Test#010 : two platforms are added and removed correctly with --save --fetch', function(done) {
         var pkgJsonPath = path.join(process.cwd(),'package.json');
-        expect(pkgJsonPath).toExist();
         var pkgJson;
+        expect(fs.existsSync(pkgJsonPath)).toEqual(true);
         // Delete any previous caches of require(package.json).
         delete require.cache[require.resolve(pkgJsonPath)];
         pkgJson = require(pkgJsonPath);
