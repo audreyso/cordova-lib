@@ -145,7 +145,14 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                 if (spec) {
                     var maybeDir = cordova_util.fixRelativePath(spec);
                     if (cordova_util.isDirectory(maybeDir)) {
-                        return getPlatformDetailsFromDir(maybeDir, platform);
+                        if (opts.fetch) {
+                            return fetch(spec, projectRoot, opts)
+                            .then(function (directory) {
+                                return getPlatformDetailsFromDir(directory,platform)
+                            });
+                        } else {
+                            return getPlatformDetailsFromDir(maybeDir, platform);
+                        }
                     }
                 }
                 return downloadPlatform(projectRoot, platform, spec, opts);
@@ -265,20 +272,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         
                         // Save to add to package.json's cordova.platforms array in the next then.
                         platformsToSave.push(platform);
-                        if(pkgJson) {
-                            fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
-                        }
-                    }
-                    
-                    // If local path is passed in with --save --fetch, add it to pkg.json. 
-                    if(opts.fetch && opts.save && pkgJson && fs.existsSync(spec)) {
-                        return fetch(spec, projectRoot, opts)
-                        .then(function (directory) {
-                            return getPlatformDetailsFromDir(directory,platform)
-                        });
                         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                     }
-                    events.emit('log', 'Saving ' + platform + '@' + spec + ' into pkg.json file ...'); 
                 });
             });
         }).then(function() { 

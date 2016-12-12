@@ -408,12 +408,12 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
     if (!parsedSpec.version) {
         // Retrieve from pkg.json.
         if(pkgJson && pkgJson.dependencies && pkgJson.dependencies[id]) {
-            parsedSpec.version = pkgJson.dependencies[id];
             events.emit('verbose', 'No version specified for ' + id + ', retrieving version from package.json');
+            parsedSpec.version = pkgJson.dependencies[id];
         } else {
             // If no version is specified, retrieve the version (or source) from config.xml.
-            parsedSpec.version = getVersionFromConfigFile(id, cfg);
             events.emit('verbose', 'No version specified for ' + id + ', retrieving version from config.xml');
+            parsedSpec.version = getVersionFromConfigFile(id, cfg);
         }
     }
 
@@ -425,8 +425,7 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
             if (parsedSpec.version.charAt(0) === '^' || parsedSpec.version.charAt(0) === '~') {
                 noSymbolVersion = parsedSpec.version.slice(1);
             }
-            if (semver.satisfies(noSymbolVersion, pkgJson.dependencies[parsedSpec.package])) {
-            } else {
+            if (!semver.satisfies(noSymbolVersion, pkgJson.dependencies[parsedSpec.package])) {
                 pkgJson.dependencies[parsedSpec.package] = parsedSpec.version;
                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
             }
@@ -437,7 +436,7 @@ function determinePluginTarget(projectRoot, cfg, target, fetchOptions) {
         return Q(parsedSpec.version);
     }
 
-    // If version exists in config.xml, use that.
+    // If version exists in pkg.json or config.xml, use that.
     if (parsedSpec.version) {
         return Q(id + '@' + parsedSpec.version);
     }
