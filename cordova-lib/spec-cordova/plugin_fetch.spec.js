@@ -154,7 +154,7 @@ function removeTestProject() {
     shell.rm('-rf', tempDir);
 }
 
-describe('plugin fetching version selection', function(done) {
+describe('plugin fetching version selection', function() {
     createTestProject();
 
     beforeEach(function() {

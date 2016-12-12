@@ -522,7 +522,7 @@ describe('HooksRunner', function() {
         });
 
         describe('module-level hooks (event handlers)', function() {
-            var handler = jasmine.createSpy().andReturn(Q());
+            var handler = jasmine.createSpy().and.returnValue(Q());
             var test_event = 'before_build';
 
             afterEach(function () {
