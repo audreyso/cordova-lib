@@ -300,9 +300,10 @@ describe('plugin end-to-end', function() {
     
     // Test#025: has a pkg.json. Checks if local path is added to pkg.json for platform and plugin add.
     it('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function (done) {
+
         var cwd = process.cwd();
         var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/cordova-ios');
-        var pluginPath = path.join(testRunRoot,"spec-cordova/fixtures/plugins/fake1");
+        var pluginPath = path.join(testRunRoot,'spec-cordova/fixtures/plugins/fake1');
         var pkgJsonPath = path.join(cwd,'package.json');
         var pkgJson;
         delete require.cache[require.resolve(pkgJsonPath)];
@@ -627,16 +628,15 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
             // Add ios with --save and --fetch.
             return cordova.raw.platform('add', [iosPlatform], {'save':true , 'fetch':true});
         }).then(function() {
+            // Require platformsFolderPath, ios and spec should be in there.
+            delete require.cache[require.resolve(platformsFolderPath)];
+            platformsJson = require(platformsFolderPath);
             // Delete any previous caches of require(package.json).
             // ios has been added.
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             // No change to pkg.json platforms or spec for ios.
             expect(pkgJson.cordova.platforms).toEqual([iosPlatform]);
-            expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-splashscreen' : '^3.2.2', 'cordova-ios' : '^4.2.1' });
-            // Require platformsFolderPath, ios and spec should be in there.
-            delete require.cache[require.resolve(platformsFolderPath)];
-            platformsJson = require(platformsFolderPath);
             // Config.xml and ios/cordova/version check.
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
@@ -928,7 +928,7 @@ describe('local path is added to config.xml without pkg.json', function () {
         var configPlugin = cfg.getPlugin(configPlugins);
         var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/cordova-ios');
 
-        // Run platform add with local path.
+        // Run cordova platform add local path --save --fetch.
         return cordova.raw.platform('add', platformPath, {'save':true, 'fetch':true})
         .then(function() {
             var cfg2 = new ConfigParser(configXmlPath);

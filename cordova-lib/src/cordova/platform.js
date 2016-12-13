@@ -272,7 +272,6 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         
                         // Save to add to package.json's cordova.platforms array in the next then.
                         platformsToSave.push(platform);
-                        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                     }
                 });
             });
