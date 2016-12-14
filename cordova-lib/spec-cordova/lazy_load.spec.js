@@ -35,7 +35,7 @@ describe('lazy_load module', function() {
     var custom_path, cachePackage, fakeLazyLoad;
     beforeEach(function() {
         custom_path = spyOn(config, 'has_custom_path').and.returnValue(false);
-        cachePackage = spyOn(npmHelper, 'cachePackage').and.returnValue(false);
+        cachePackage = spyOn(npmHelper, 'cachePackage').and.returnValue(Q(path.join('lib', 'dir')));
         fakeLazyLoad = function (id, platform, version) {
             if (platform == 'wp7' || platform == 'wp8') {
                 return Q(path.join('lib', 'wp', id, version, platform));
