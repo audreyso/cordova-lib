@@ -91,7 +91,7 @@ var errorHandler = {
 // that use a searchpath. See loadLocalPlugins() in plugman/fetch.js for details.
 // The searchpath behavior gets tested in the plugman spec
 function mockPluginFetch(id, dir) {
-    spyOn(plugman.raw, 'fetch').andCallFake(function(target, pluginPath, fetchOptions) {
+    spyOn(plugman.raw, 'fetch').and.callFake(function(target, pluginPath, fetchOptions) {
         var dest = path.join(project, 'plugins', id);
         var src = path.join(dir, 'plugin.xml');
 
@@ -106,12 +106,12 @@ function setupPlatformApiSpies() {
     var addPluginOrig = api.addPlugin;
     var removePluginOrig = api.removePlugin;
 
-    spyOn(api, 'addPlugin').andCallFake(function () {
+    spyOn(api, 'addPlugin').and.callFake(function () {
         return addPluginOrig.apply(api, arguments)
         .thenResolve(true);
     });
 
-    spyOn(api, 'removePlugin').andCallFake(function () {
+    spyOn(api, 'removePlugin').and.callFake(function () {
         return removePluginOrig.apply(api, arguments)
         .thenResolve(true);
     });
@@ -135,8 +135,8 @@ describe('plugin end-to-end', function() {
         util._resetOrigCwd();
         delete process.env.PWD;
 
-        spyOn(prepare, 'preparePlatforms').andCallThrough();
-        spyOn(errorHandler, 'errorCallback').andCallThrough();
+        spyOn(prepare, 'preparePlatforms').and.callThrough();
+        spyOn(errorHandler, 'errorCallback').and.callThrough();
     });
 
     afterEach(function() {
@@ -269,7 +269,7 @@ describe('plugin end-to-end', function() {
     it('should select the plugin version based on npm info when fetching from npm', function(done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
-        spyOn(registry, 'info').andCallThrough();
+        spyOn(registry, 'info').and.callThrough();
         addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {}, done)
         .then(function() {
             expect(registry.info).toHaveBeenCalled();
@@ -285,7 +285,7 @@ describe('plugin end-to-end', function() {
         var scopedPackage = '@testscope/' + npmInfoTestPlugin;
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
-        spyOn(registry, 'info').andReturn(Q({}));
+        spyOn(registry, 'info').and.returnValue(Q({}));
         addPlugin(scopedPackage, npmInfoTestPlugin, {}, done)
         .then(function() {
             // Check to make sure that we are at least trying to get the correct package.
