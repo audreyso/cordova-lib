@@ -154,14 +154,14 @@ function removeTestProject() {
     shell.rm('-rf', tempDir);
 }
 
-describe('plugin fetching version selection', function(done) {
+describe('plugin fetching version selection', function() {
     createTestProject();
 
     beforeEach(function() {
         // Adding a matcher for checking the array of warning messages so that
         // we can have meanigful error messages. Expected is passed because
         // Jasmine will print it out if the matcher fails
-        this.addMatchers({
+        jasmine.addMatchers({
             toContain: function(check, expected) {
                 for(var i = 0; i < this.actual.length; i++) {
                     if (check(this.actual[i])) {
