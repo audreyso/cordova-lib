@@ -24,7 +24,7 @@ var create = require('../src/plugman/create'),
 
 describe( 'create', function() {
     it( 'should call create', function() {
-        var sCreate = spyOn( plugman, 'create' ).andReturn(Q());
+        var sCreate = spyOn( plugman, 'create' ).and.returnValue(Q());
         plugman.create();
         expect(sCreate).toHaveBeenCalled();
     });
@@ -39,8 +39,8 @@ describe( 'create plugin', function() {
         f.then( function() { done = true; }, function(err) { done = err; } );
     }
     beforeEach( function() {
-        existsSync = spyOn( fs, 'existsSync' ).andReturn( false );
-        mkdir = spyOn( shell, 'mkdir' ).andReturn( true );
+        existsSync = spyOn( fs, 'existsSync' ).and.returnValue( false );
+        mkdir = spyOn( shell, 'mkdir' ).and.returnValue( true );
         writeFileSync = spyOn( fs, 'writeFileSync' );
         done = false;
     });
@@ -64,7 +64,7 @@ describe( 'create plugin in existing plugin', function() {
         f.then( function() { done = true; }, function(err) { done = err; } );
     }
     beforeEach( function() {
-        existsSync = spyOn( fs, 'existsSync' ).andReturn( true );
+        existsSync = spyOn( fs, 'existsSync' ).and.returnValue( true );
         done = false;
     });
 

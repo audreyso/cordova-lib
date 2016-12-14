@@ -64,7 +64,7 @@ describe('fetch', function() {
         beforeEach(function() {
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
-            cp = spyOn(shell, 'cp').andCallThrough();
+            cp = spyOn(shell, 'cp').and.callThrough();
             save_metadata = spyOn(metadata, 'save_fetch_metadata');
             realrm('-rf', temp);
             fetch.__set__('localPlugins', null);
@@ -121,7 +121,7 @@ describe('fetch', function() {
         }
 
         beforeEach(function() {
-            clone = spyOn(plugins, 'clonePluginGitRepo').andReturn(Q(test_plugin));
+            clone = spyOn(plugins, 'clonePluginGitRepo').and.returnValue(Q(test_plugin));
             save_metadata = spyOn(metadata, 'save_fetch_metadata');
             done = false;
         });
@@ -264,7 +264,7 @@ describe('fetch', function() {
         else {
             it('should skip copy to avoid recursive error', function(done) {
 
-                var cp = spyOn(shell, 'cp').andCallFake(function(){});
+                var cp = spyOn(shell, 'cp').and.callFake(function(){});
 
                 wrapper(fetch(srcDir, appDir),done, function() {
                     expect(cp).not.toHaveBeenCalled();
@@ -281,7 +281,7 @@ describe('fetch', function() {
             rm = spyOn(shell, 'rm');
             sym = spyOn(fs, 'symlinkSync');
             save_metadata = spyOn(metadata, 'save_fetch_metadata');
-            sFetch = spyOn(registry, 'fetch').andReturn(Q(test_plugin));
+            sFetch = spyOn(registry, 'fetch').and.returnValue(Q(test_plugin));
             realrm('-rf', temp);
         });
 

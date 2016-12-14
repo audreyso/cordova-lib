@@ -22,8 +22,8 @@ var platform = require('../src/plugman/platform'),
 
 describe( 'platform add/remove', function() {
     it( 'should call platform add', function() {
-        var sPlatformA = spyOn( platform, 'add' ).andReturn(Q()),
-            sPlatformR = spyOn( platform, 'remove' ).andReturn(Q());
+        var sPlatformA = spyOn( platform, 'add' ).and.returnValue(Q()),
+            sPlatformR = spyOn( platform, 'remove' ).and.returnValue(Q());
         platform.add();
         expect(sPlatformA).toHaveBeenCalled();
         platform.remove();
@@ -39,7 +39,7 @@ describe( 'platform add', function() {
         f.then( function() { done = true; }, function(err) { done = err; } );
     }
     beforeEach( function() {
-        existsSync = spyOn( fs, 'existsSync' ).andReturn( false );
+        existsSync = spyOn( fs, 'existsSync' ).and.returnValue( false );
         done = false;
     });
     it( 'should error on non existing plugin.xml', function() {
@@ -61,7 +61,7 @@ describe( 'platform remove', function() {
         f.then( function() { done = true; }, function(err) { done = err; } );
     }
     beforeEach( function() {
-        existsSync = spyOn( fs, 'existsSync' ).andReturn( false );
+        existsSync = spyOn( fs, 'existsSync' ).and.returnValue( false );
         done = false;
     });
     it( 'should error on non existing plugin.xml', function() {
