@@ -249,7 +249,7 @@ describe('HooksRunner', function() {
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
 
                 return hooksRunner.fire(test_event, hookOptions).then(function() {
-                    expect(hooksOrderFile).toBeDefined();
+                    expect(hooksOrderFile).toExist();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -268,7 +268,7 @@ describe('HooksRunner', function() {
                 hookOptions.cordova.platforms = [];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toBeDefined();
+                    expect(hooksOrderFile).toExist();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -286,7 +286,7 @@ describe('HooksRunner', function() {
                 switchToOnlyNonPlatformScriptsAppConfig(projectRoot);
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toBeDefined();
+                    expect(hooksOrderFile).toExist();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -305,7 +305,7 @@ describe('HooksRunner', function() {
                 switchToOnePlatformScriptsAppConfig(projectRoot);
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toBeDefined();
+                    expect(hooksOrderFile).toExist();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -326,7 +326,7 @@ describe('HooksRunner', function() {
                 hookOptions.cordova.platforms = ['android'];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toBeDefined();
+                    expect(hooksOrderFile).toExist();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
 
@@ -353,7 +353,7 @@ describe('HooksRunner', function() {
                 switchToOnlyNonPlatformScriptsPluginConfig();
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toBeDefined();
+                    expect(hooksOrderFile).toExist();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -372,7 +372,7 @@ describe('HooksRunner', function() {
                 switchToOnePlatformScriptsPluginConfig();
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toBeDefined();
+                    expect(hooksOrderFile).toExist();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -393,7 +393,7 @@ describe('HooksRunner', function() {
                 hookOptions.cordova.platforms = ['android'];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toBeDefined();
+                    expect(hooksOrderFile).toExist();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
 
@@ -472,7 +472,7 @@ describe('HooksRunner', function() {
                 hookOptions.nohooks = ['before_build'];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
-                    expect(msg).toBeDefined();
+                    expect(msg).toExist();
                     expect(msg).toBe('hook before_build is disabled.');
                 }).fail(function (err) {
                     expect(err).toBeUndefined();
@@ -509,7 +509,7 @@ describe('HooksRunner', function() {
                 return test_events.reduce(function(soFar, test_event) {
                     return soFar.then(function() {
                         return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
-                            expect(msg).toBeDefined();
+                            expect(msg).toExist();
                             expect(msg).toBe('hook ' + test_event + ' is disabled.');
                         });
                     });
@@ -535,7 +535,7 @@ describe('HooksRunner', function() {
                 hooksRunner.fire(test_event, hookOptions).then(function () {
                     expect(handler).toHaveBeenCalled();
                 }).fail(function (err) {
-                    expect(err).not.toBeDefined();
+                    expect(err).not.toExist();
                 }).fin(done);
             });
 
@@ -545,7 +545,7 @@ describe('HooksRunner', function() {
                     expect(handler).toHaveBeenCalledWith(hookOptions);
                 }).fail(function (err) {
                     console.log(err);
-                    expect(err).not.toBeDefined();
+                    expect(err).not.toExist();
                 }).fin(done);
             });
 
@@ -638,7 +638,7 @@ describe('HooksRunner', function() {
                 hooksRunner.fire('fail', hookOptions).then(function () {
                     expect('the call').toBe('a failure');
                 }, function (err) {
-                    expect(err).toBeDefined();
+                    expect(err).toExist();
                 }).fin(done);
             });
         });

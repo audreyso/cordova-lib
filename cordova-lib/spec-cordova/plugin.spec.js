@@ -59,7 +59,7 @@ function addPlugin(target, id, options) {
         // Add a fake plugin from fixtures.
         return cordova.raw.plugin('add', target, options);
     }).then(function() {
-        expect(path.join(project, 'plugins', id, 'plugin.xml')).toBeDefined();
+        expect(path.join(project, 'plugins', id, 'plugin.xml')).toExist();
     }).then(function() {
         return cordova.raw.plugin('ls');
     }).then(function() {
@@ -72,7 +72,7 @@ function removePlugin(id) {
     return cordova.raw.plugin('rm', id)
     .then(function() {
         // The whole dir should be gone.
-        expect(path.join(project, 'plugins', id)).not.toBeDefined();
+        expect(path.join(project, 'plugins', id)).not.toExist();
     }).then(function() {
         return cordova.raw.plugin('ls');
     }).then(function() {
@@ -253,7 +253,7 @@ describe('plugin end-to-end', function() {
             expect(registry.info).not.toHaveBeenCalled();
 
             var fetchOptions = plugman.raw.fetch.mostRecentCall.args[2];
-            expect(fetchOptions.searchpath).toBeDefined();
+            expect(fetchOptions.searchpath).toExist();
         })
         .fail(function(err) {
             console.error(err);
