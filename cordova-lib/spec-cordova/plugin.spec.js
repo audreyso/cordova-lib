@@ -59,7 +59,7 @@ function addPlugin(target, id, options) {
         // Add a fake plugin from fixtures.
         return cordova.raw.plugin('add', target, options);
     }).then(function() {
-        expect(path.join(project, 'plugins', id, 'plugin.xml')).toExist();
+        expect(path.join(project, 'plugins', id, 'plugin.xml')).toBeDefined();
     }).then(function() {
         return cordova.raw.plugin('ls');
     }).then(function() {
@@ -72,7 +72,7 @@ function removePlugin(id) {
     return cordova.raw.plugin('rm', id)
     .then(function() {
         // The whole dir should be gone.
-        expect(path.join(project, 'plugins', id)).not.toExist();
+        expect(path.join(project, 'plugins', id)).not.toBeDefined();
     }).then(function() {
         return cordova.raw.plugin('ls');
     }).then(function() {
@@ -83,6 +83,7 @@ function removePlugin(id) {
 var errorHandler = {
     errorCallback: function(error) {
         // We want the error to be printed by jasmine
+        console.log(error);
         expect(error).toBeUndefined();
     }
 };
@@ -150,9 +151,12 @@ describe('plugin end-to-end', function() {
         .then(function() {
             return removePlugin(pluginId);
         })
-        .fail(errorHandler.errorCallback)
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
         .fin(done);
-    });
+    }, 30000);
 
     it('should run prepare after plugin installation/removal by default', function(done) {
         addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {})
@@ -164,9 +168,12 @@ describe('plugin end-to-end', function() {
         .then(function () {
             expect(prepare.preparePlatforms).toHaveBeenCalled();
         })
-        .fail(errorHandler.errorCallback)
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
         .fin(done);
-    });
+    }, 30000);
 
     it('should not run prepare after plugin installation/removal if platform return non-falsy value', function(done) {
         setupPlatformApiSpies();
@@ -178,9 +185,12 @@ describe('plugin end-to-end', function() {
         .then(function () {
             expect(prepare.preparePlatforms).not.toHaveBeenCalled();
         })
-        .fail(errorHandler.errorCallback)
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
         .fin(done);
-    });
+    }, 30000);
 
     it('should successfully add a plugin using relative path when running from subdir inside of project', function(done) {
         // Copy plugin to subdir inside of the project. This is required since path.relative
@@ -199,9 +209,12 @@ describe('plugin end-to-end', function() {
         .then(function() {
             return removePlugin(pluginId);
         })
-        .fail(errorHandler.errorCallback)
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
         .fin(done);
-    });
+    }, 30000);
 
     it('should respect preference default values', function (done) {    
        addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED:'NO', REQUIRED_ANDROID:'NO'}}, done)
@@ -216,19 +229,24 @@ describe('plugin end-to-end', function() {
             expect(defaultPluginPreferences.REQUIRED).toBe('NO');
             return removePlugin(org_test_defaultvariables);
        })
-       .fail(errorHandler.errorCallback)
-       .fin(done);
-    });
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
+        .fin(done);
+    }, 30000);
 
     it('should successfully add a plugin when specifying CLI variables', function(done) {
         addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED:'yes', REQUIRED_ANDROID:'yes'}}, done)
-        .fail(errorHandler.errorCallback)
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
         .fin(done);
-    });
+    }, 30000);
 
     it('should not check npm info when using the searchpath flag', function(done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
-
         spyOn(registry, 'info');
         addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {searchpath: pluginsDir}, done)
         .then(function() {
@@ -237,9 +255,12 @@ describe('plugin end-to-end', function() {
             var fetchOptions = plugman.raw.fetch.mostRecentCall.args[2];
             expect(fetchOptions.searchpath).toBeDefined();
         })
-        .fail(errorHandler.errorCallback)
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
         .fin(done);
-    });
+    }, 30000);
 
     it('should not check npm info when using the noregistry flag', function(done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
@@ -252,9 +273,12 @@ describe('plugin end-to-end', function() {
             var fetchOptions = plugman.raw.fetch.mostRecentCall.args[2];
             expect(fetchOptions.noregistry).toBeTruthy();
         })
-        .fail(errorHandler.errorCallback)
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
         .fin(done);
-    });
+    }, 30000);
 
     it('should not check npm info when fetching from a Git repository', function(done) {
         spyOn(registry, 'info');
@@ -262,9 +286,12 @@ describe('plugin end-to-end', function() {
         .then(function() {
             expect(registry.info).not.toHaveBeenCalled();
         })
-        .fail(errorHandler.errorCallback)
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
         .fin(done);
-    });
+    }, 30000);
 
     it('should select the plugin version based on npm info when fetching from npm', function(done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
@@ -277,9 +304,12 @@ describe('plugin end-to-end', function() {
             var fetchTarget = plugman.raw.fetch.mostRecentCall.args[0];
             expect(fetchTarget).toEqual(npmInfoTestPlugin + '@' + npmInfoTestPluginVersion);
         })
-        .fail(errorHandler.errorCallback)
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
         .fin(done);
-    });
+    }, 30000);
 
     it('should handle scoped npm packages', function(done) {
         var scopedPackage = '@testscope/' + npmInfoTestPlugin;
@@ -296,9 +326,12 @@ describe('plugin end-to-end', function() {
             var fetchTarget = plugman.raw.fetch.mostRecentCall.args[0];
             expect(fetchTarget).toEqual(scopedPackage);
         })
-        .fail(errorHandler.errorCallback)
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
         .fin(done);
-    });
+    }, 30000);
 
     it('should handle scoped npm packages with given version tags', function(done) {
         var scopedPackage = '@testscope/' + npmInfoTestPlugin + '@latest';
@@ -312,7 +345,10 @@ describe('plugin end-to-end', function() {
             var fetchTarget = plugman.raw.fetch.mostRecentCall.args[0];
             expect(fetchTarget).toEqual(scopedPackage);
         })
-        .fail(errorHandler.errorCallback)
+        .fail(function(err) {
+            console.error(err);
+            expect(err).toBeUndefined();
+        })
         .fin(done);
-    });
+    }, 30000);
 });

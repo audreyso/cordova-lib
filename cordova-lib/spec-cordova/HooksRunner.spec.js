@@ -249,7 +249,7 @@ describe('HooksRunner', function() {
                 var hooksOrderFile = path.join(projectRoot, 'hooks_order.txt');
 
                 return hooksRunner.fire(test_event, hookOptions).then(function() {
-                    expect(hooksOrderFile).toExist();
+                    expect(hooksOrderFile).toBeDefined();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -268,7 +268,7 @@ describe('HooksRunner', function() {
                 hookOptions.cordova.platforms = [];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
+                    expect(hooksOrderFile).toBeDefined();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -286,7 +286,7 @@ describe('HooksRunner', function() {
                 switchToOnlyNonPlatformScriptsAppConfig(projectRoot);
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
+                    expect(hooksOrderFile).toBeDefined();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -305,7 +305,7 @@ describe('HooksRunner', function() {
                 switchToOnePlatformScriptsAppConfig(projectRoot);
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
+                    expect(hooksOrderFile).toBeDefined();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -326,7 +326,7 @@ describe('HooksRunner', function() {
                 hookOptions.cordova.platforms = ['android'];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
+                    expect(hooksOrderFile).toBeDefined();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
 
@@ -353,7 +353,7 @@ describe('HooksRunner', function() {
                 switchToOnlyNonPlatformScriptsPluginConfig();
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
+                    expect(hooksOrderFile).toBeDefined();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -372,7 +372,7 @@ describe('HooksRunner', function() {
                 switchToOnePlatformScriptsPluginConfig();
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
+                    expect(hooksOrderFile).toBeDefined();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
                 }).fail(function (err) {
@@ -393,7 +393,7 @@ describe('HooksRunner', function() {
                 hookOptions.cordova.platforms = ['android'];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function () {
-                    expect(hooksOrderFile).toExist();
+                    expect(hooksOrderFile).toBeDefined();
 
                     expect(hooksOrderFileIsOrdered(hooksOrderFile)).toBe(true);
 

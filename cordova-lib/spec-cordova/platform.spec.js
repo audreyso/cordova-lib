@@ -57,7 +57,7 @@ describe('platform end-to-end', function () {
 
         // The config.json in the fixture project points at fake "local" paths.
         // Since it's not a URL, the lazy-loader will just return the junk path.
-        spyOn(superspawn, 'spawn').andCallFake(function(cmd, args) {
+        spyOn(superspawn, 'spawn').and.callFake(function(cmd, args) {
             if (cmd.match(/create\b/)) {
                 // This is a call to the bin/create script, so do the copy ourselves.
                 shell.cp('-R', path.join(__dirname, 'fixtures', 'platforms', 'android'), path.join(project, 'platforms'));
@@ -105,22 +105,22 @@ describe('platform end-to-end', function () {
             return cordova.raw.platform('add', [helpers.testPlatform]);
         }).then(function() {
             // Check the platform add was successful.
-            expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
-            expect(path.join(project, 'platforms', helpers.testPlatform, 'cordova')).toExist();
+            expect(path.join(project, 'platforms', helpers.testPlatform)).toBeDefined();
+            expect(path.join(project, 'platforms', helpers.testPlatform, 'cordova')).toBeDefined();
         }).then(fullPlatformList) // Check for it in platform ls.
         .then(function() {
             // Try to update the platform.
             return cordova.raw.platform('update', [helpers.testPlatform]);
         }).then(function() {
             // Our fake update script in the exec mock above creates this dummy file.
-            expect(path.join(project, 'platforms', helpers.testPlatform, 'updated')).toExist();
+            expect(path.join(project, 'platforms', helpers.testPlatform, 'updated')).toBeDefined();
         }).then(fullPlatformList) // Platform should still be in platform ls.
         .then(function() {
             // And now remove it.
             return cordova.raw.platform('rm', [helpers.testPlatform]);
         }).then(function() {
             // It should be gone.
-            expect(path.join(project, 'platforms', helpers.testPlatform)).not.toExist();
+            expect(path.join(project, 'platforms', helpers.testPlatform)).not.toBeDefined();
         }).then(emptyPlatformList) // platform ls should be empty too.
         .fail(function(err) {
             expect(err).toBeUndefined();
@@ -135,9 +135,9 @@ describe('platform end-to-end', function () {
         })
         .then(function() {
             // Check the platform add was successful.
-            expect(path.join(project, 'platforms', helpers.testPlatform)).toExist();
+            expect(path.join(project, 'platforms', helpers.testPlatform)).toBeDefined();
             // Check that plugin files exists in www dir
-            expect(path.join(project, 'platforms', helpers.testPlatform, 'assets/www/test.js')).toExist();
+            expect(path.join(project, 'platforms', helpers.testPlatform, 'assets/www/test.js')).toBeDefined();
         })
         .fail(function(err) {
             expect(err).toBeUndefined();
@@ -148,8 +148,8 @@ describe('platform end-to-end', function () {
     it('should call prepare after plugins were installed into platform', function(done) {
         var order = '';
         var fail = jasmine.createSpy(fail);
-        spyOn(plugman.raw, 'install').andCallFake(function() { order += 'I'; });
-        spyOn(cordova.raw, 'prepare').andCallFake(function() { order += 'P'; });
+        spyOn(plugman.raw, 'install').and.callFake(function() { order += 'I'; });
+        spyOn(cordova.raw, 'prepare').and.callFake(function() { order += 'P'; });
 
         cordova.raw.plugin('add', path.join(pluginsDir, 'test'))
         .then(function() {
@@ -228,18 +228,18 @@ describe('platform add plugin rm end-to-end', function () {
             return cordova.raw.plugin('add', 'cordova-plugin-media');
         })
         .then(function() {
-            expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
-            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).toBeDefined();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toBeDefined();
             return cordova.raw.platform('add', 'android@latest');
         })
         .then(function() {
-            expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
-            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).toBeDefined();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toBeDefined();
             return cordova.raw.plugin('rm', 'cordova-plugin-media');
         })
         .then(function() {
-            expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
-            expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toBeDefined();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toBeDefined();
         })
         .fail(function(err) {
             console.error(err);
@@ -273,13 +273,13 @@ describe('platform add and remove --fetch', function () {
             return cordova.raw.platform('add', 'ios', {'fetch':true});
         })
         .then(function() {
-            expect(path.join(nodeModulesDir, 'cordova-ios')).toExist();
-            expect(path.join(platformsDir, 'ios')).toExist();
+            expect(path.join(nodeModulesDir, 'cordova-ios')).toBeDefined();
+            expect(path.join(platformsDir, 'ios')).toBeDefined();
             return cordova.raw.platform('add', 'android', {'fetch':true});
         })
         .then(function() {
-            expect(path.join(nodeModulesDir, 'cordova-android')).toExist();
-            expect(path.join(platformsDir, 'android')).toExist();
+            expect(path.join(nodeModulesDir, 'cordova-android')).toBeDefined();
+            expect(path.join(platformsDir, 'android')).toBeDefined();
             //Tests finish before this command finishes resolving
             //return cordova.raw.platform('rm', 'ios', {'fetch':true});
         })
@@ -327,23 +327,23 @@ describe('plugin add and rm end-to-end --fetch', function () {
             return cordova.raw.plugin('add', 'cordova-plugin-media', {'fetch': true});
         })
         .then(function() {
-            expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
-            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
-            expect(path.join(pluginsDir, 'cordova-plugin-compat')).toExist();
-            expect(path.join(project, 'node_modules', 'cordova-plugin-media')).toExist();
-            expect(path.join(project, 'node_modules', 'cordova-plugin-file')).toExist();
-            expect(path.join(project, 'node_modules', 'cordova-plugin-compat')).toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).toBeDefined();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toBeDefined();
+            expect(path.join(pluginsDir, 'cordova-plugin-compat')).toBeDefined();
+            expect(path.join(project, 'node_modules', 'cordova-plugin-media')).toBeDefined();
+            expect(path.join(project, 'node_modules', 'cordova-plugin-file')).toBeDefined();
+            expect(path.join(project, 'node_modules', 'cordova-plugin-compat')).toBeDefined();
             return cordova.raw.platform('add', 'android', {'fetch':true});
         })
         .then(function() {
-            expect(path.join(pluginsDir, 'cordova-plugin-media')).toExist();
-            expect(path.join(pluginsDir, 'cordova-plugin-file')).toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).toBeDefined();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).toBeDefined();
             return cordova.raw.plugin('rm', 'cordova-plugin-media', {'fetch':true});
         })
         .then(function() {
-            expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toExist();
-            expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toExist();
-            expect(path.join(pluginsDir, 'cordova-plugin-compat')).not.toExist();
+            expect(path.join(pluginsDir, 'cordova-plugin-media')).not.toBeDefined();
+            expect(path.join(pluginsDir, 'cordova-plugin-file')).not.toBeDefined();
+            expect(path.join(pluginsDir, 'cordova-plugin-compat')).not.toBeDefined();
             //These don't work yet due to the tests finishing before the promise resolves.
             //expect(path.join(project, 'node_modules', 'cordova-plugin-media')).not.toExist();
             //expect(path.join(project, 'node_modules', 'cordova-plugin-file')).not.toExist();
