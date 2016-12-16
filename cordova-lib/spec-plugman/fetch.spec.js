@@ -125,7 +125,7 @@ describe('fetch', function() {
             save_metadata = spyOn(metadata, 'save_fetch_metadata');
             done = false;
         });
-        it('should call clonePluginGitRepo for https:// and git:// based urls', function() {
+        it('should call clonePluginGitRepo for https:// and git:// based urls', function(done) {
             var url = 'https://github.com/bobeast/GAPlugin.git';
             runs(function() {
                 fetchPromise(fetch(url, temp));
@@ -137,67 +137,58 @@ describe('fetch', function() {
                 expect(save_metadata).toHaveBeenCalled();
             });
         });
-        it('should call clonePluginGitRepo with subdir if applicable', function() {
+        
+        it('should call clonePluginGitRepo with subdir if applicable', function(done) {
             var url = 'https://github.com/bobeast/GAPlugin.git';
             var dir = 'fakeSubDir';
-            runs(function() {
-                fetchPromise(fetch(url, temp, { subdir: dir }));
-            });
-            waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
-            runs(function() {
+            fetch(url, temp, { subdir: dir }).then(function(){
                 expect(clone).toHaveBeenCalledWith(url, temp, dir, undefined, undefined);
                 expect(save_metadata).toHaveBeenCalled();
+                done();
             });
-        });
-        it('should call clonePluginGitRepo with subdir and git ref if applicable', function() {
+        }, 6000);
+
+        it('should call clonePluginGitRepo with subdir and git ref if applicable', function(done) {
             var url = 'https://github.com/bobeast/GAPlugin.git';
             var dir = 'fakeSubDir';
             var ref = 'fakeGitRef';
-            runs(function() {
-                fetchPromise(fetch(url, temp, { subdir: dir, git_ref: ref }));
-            });
-            waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
-            runs(function() {
+            fetch(url, temp, { subdir: dir, git_ref: ref }).then(function(){
                 expect(clone).toHaveBeenCalledWith(url, temp, dir, ref, undefined);
                 expect(save_metadata).toHaveBeenCalled();
+                done();
             });
-        });
-        it('should extract the git ref from the URL hash, if provided', function() {
+        }, 6000);
+
+        it('should extract the git ref from the URL hash, if provided', function(done) {
             var url = 'https://github.com/bobeast/GAPlugin.git#fakeGitRef';
             var baseURL = 'https://github.com/bobeast/GAPlugin.git';
-            runs(function() {
-                fetchPromise(fetch(url, temp, {}));
-            });
-            waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
-            runs(function() {
+            fetch(url, temp, {}).then(function(){
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, '.', 'fakeGitRef', undefined);
                 expect(save_metadata).toHaveBeenCalled();
+                done();
             });
-        });
-        it('should extract the subdir from the URL hash, if provided', function() {
+        }, 6000);
+
+        it('should extract the subdir from the URL hash, if provided', function(done) {
             var url = 'https://github.com/bobeast/GAPlugin.git#:fakeSubDir';
             var baseURL = 'https://github.com/bobeast/GAPlugin.git';
-            runs(function() {
-                fetchPromise(fetch(url, temp, {}));
-            });
-            waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
-            runs(function() {
+            fetch(url, temp, {}).then(function(result){
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fakeSubDir', undefined, undefined);
                 expect(save_metadata).toHaveBeenCalled();
+                done();
             });
-        });
-        it('should extract the git ref and subdir from the URL hash, if provided', function() {
+        }, 6000);
+
+        it('should extract the git ref and subdir from the URL hash, if provided', function(done) {
             var url = 'https://github.com/bobeast/GAPlugin.git#fakeGitRef:/fake/Sub/Dir/';
             var baseURL = 'https://github.com/bobeast/GAPlugin.git';
-            runs(function() {
-                fetchPromise(fetch(url, temp, {}));
-            });
-            waitsFor(function() { return done; }, 'fetch promise never resolved', 250);
-            runs(function() {
+            fetch(url, temp, {}).then(function(result){
                 expect(clone).toHaveBeenCalledWith(baseURL, temp, 'fake/Sub/Dir', 'fakeGitRef', undefined);
                 expect(save_metadata).toHaveBeenCalled();
+                done();
             });
-        });
+        }, 6000);
+
         it('should fail when the expected ID doesn\'t match', function(done) {
             fetch('https://github.com/bobeast/GAPlugin.git', temp, { expected_id: 'wrongID' })
             .then(function() {

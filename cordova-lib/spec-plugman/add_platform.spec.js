@@ -42,15 +42,16 @@ describe( 'platform add', function() {
         existsSync = spyOn( fs, 'existsSync' ).and.returnValue( false );
         done = false;
     });
-    it( 'should error on non existing plugin.xml', function() {
-        runs(function() {
-            platformPromise( platform.add() );
+    it( 'should error on non existing plugin.xml', function(done) {
+        platform.add().then(function(result){
+            expect(false).toBe(true);
+            done();
+        },
+        function err(errMsg) {
+            expect(errMsg.toString()).toContain('can\'t find a plugin.xml.  Are you in the plugin?');
+            done();
         });
-        waitsFor(function() { return done; }, 'platform promise never resolved', 500);
-        runs(function() {
-            expect(''+ done ).toContain( 'can\'t find a plugin.xml.  Are you in the plugin?'  );
-        });
-    });
+    }, 6000);
 });
 
 
@@ -64,13 +65,14 @@ describe( 'platform remove', function() {
         existsSync = spyOn( fs, 'existsSync' ).and.returnValue( false );
         done = false;
     });
-    it( 'should error on non existing plugin.xml', function() {
-        runs(function() {
-            platformPromise( platform.remove() );
+    it( 'should error on non existing plugin.xml', function(done) {
+        platform.remove().then(function(result) {
+            expect(false).toBe(true);
+            done();
+        },
+        function err(errMsg) {
+            expect(errMsg.toString()).toContain( 'can\'t find a plugin.xml.  Are you in the plugin?'  );
+            done();
         });
-        waitsFor(function() { return done; }, 'platform promise never resolved', 500);
-        runs(function() {
-            expect(''+ done ).toContain( 'can\'t find a plugin.xml.  Are you in the plugin?'  );
-        });
-    });
+    }, 6000);
 });

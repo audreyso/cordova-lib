@@ -472,7 +472,7 @@ describe('HooksRunner', function() {
                 hookOptions.nohooks = ['before_build'];
 
                 return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
-                    expect(msg).toExist();
+                    expect(msg).toBeDefined();
                     expect(msg).toBe('hook before_build is disabled.');
                 }).fail(function (err) {
                     expect(err).toBeUndefined();
@@ -509,7 +509,7 @@ describe('HooksRunner', function() {
                 return test_events.reduce(function(soFar, test_event) {
                     return soFar.then(function() {
                         return hooksRunner.fire(test_event, hookOptions).then(function (msg) {
-                            expect(msg).toExist();
+                            expect(msg).toBeDefined();
                             expect(msg).toBe('hook ' + test_event + ' is disabled.');
                         });
                     });
@@ -535,7 +535,7 @@ describe('HooksRunner', function() {
                 hooksRunner.fire(test_event, hookOptions).then(function () {
                     expect(handler).toHaveBeenCalled();
                 }).fail(function (err) {
-                    expect(err).not.toExist();
+                    expect(err).not.toBeDefined();
                 }).fin(done);
             });
 
@@ -545,7 +545,7 @@ describe('HooksRunner', function() {
                     expect(handler).toHaveBeenCalledWith(hookOptions);
                 }).fail(function (err) {
                     console.log(err);
-                    expect(err).not.toExist();
+                    expect(err).not.toBeDefined();
                 }).fin(done);
             });
 
@@ -638,7 +638,7 @@ describe('HooksRunner', function() {
                 hooksRunner.fire('fail', hookOptions).then(function () {
                     expect('the call').toBe('a failure');
                 }, function (err) {
-                    expect(err).toExist();
+                    expect(err).toBeDefined();
                 }).fin(done);
             });
         });

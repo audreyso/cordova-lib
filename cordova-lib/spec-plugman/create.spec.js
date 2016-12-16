@@ -45,7 +45,7 @@ describe( 'create plugin', function() {
         done = false;
     });
 
-    it( 'should be successful', function() {
+    it( 'should be successful', function(done) {
         runs(function() {
             createPromise( create( 'name', 'org.plugin.id', '0.0.0', '.', [] ) );
         });
@@ -68,13 +68,14 @@ describe( 'create plugin in existing plugin', function() {
         done = false;
     });
 
-    it( 'should fail due to an existing plugin.xml', function() {
-        runs(function() {
-            createPromise( create() );
+    it( 'should fail due to an existing plugin.xml', function(done) {
+        create().then(function(result) {
+            expect(false).toBe(true);
+            done();
+        },
+        function err(errMsg) {
+            expect(errMsg.toString()).toContain( 'plugin.xml already exists. Are you already in a plugin?'  );
+            done();
         });
-        waitsFor(function() { return done; }, 'create promise never resolved', 500);
-        runs(function() {
-            expect(''+ done ).toContain( 'plugin.xml already exists. Are you already in a plugin?'  );
-        });
-    });
+    }, 6000);
 });
