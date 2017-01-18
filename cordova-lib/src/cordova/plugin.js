@@ -67,6 +67,13 @@ module.exports = function plugin(command, targets, opts) {
         }
         opts.options = opts.options || [];
         opts.plugins = [];
+        
+        // Autosave is the default setting for plugin (add/remove). If --nosave is passed in, plugin not saved.
+        if(!opts.nosave) {
+           opts.save = true; 
+       } else {
+            opts.save = false;
+       }
 
         // TODO: Otherwise HooksRunner will be Object instead of function when run from tests - investigate why
         var HooksRunner = require('../hooks/HooksRunner');
@@ -134,7 +141,8 @@ module.exports = function plugin(command, targets, opts) {
                                 searchpath: searchPath,
                                 noregistry: opts.noregistry,
                                 fetch: opts.fetch || false,
-                                save: opts.save,
+                                save: opts.save || true,
+                                nosave: opts.nosave || false,
                                 nohooks: opts.nohooks,
                                 link: opts.link,
                                 pluginInfoProvider: pluginInfoProvider,
@@ -184,6 +192,7 @@ module.exports = function plugin(command, targets, opts) {
                                     browserify: opts.browserify || false,
                                     fetch: opts.fetch || false,
                                     save: opts.save,
+                                    nosave: opts.nosave,
                                     searchpath: searchPath,
                                     noregistry: opts.noregistry,
                                     link: opts.link,

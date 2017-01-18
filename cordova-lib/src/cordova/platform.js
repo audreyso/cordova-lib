@@ -46,6 +46,7 @@ for (var p in platforms) {
     module.exports[p] = platforms[p];
 }
 
+
 function update(hooksRunner, projectRoot, targets, opts) {
     return addHelper('update', hooksRunner, projectRoot, targets, opts);
 }
@@ -73,10 +74,12 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
     var xml = cordova_util.projectConfig(projectRoot);
     var cfg = new ConfigParser(xml);
     var config_json = config.read(projectRoot);
-    var autosave =  config_json.auto_save_platforms || false;
     opts = opts || {};
     opts.searchpath = opts.searchpath || config_json.plugin_search_path;
-
+    // Autosave is the default setting for adding and removing plugins.
+    if (opts.nosave) {
+        opts.save = false;
+    }
     // The "platforms" dir is safe to delete, it's almost equivalent to
     // cordova platform rm <list of all platforms>
     var platformsDir = path.join(projectRoot, 'platforms');
@@ -109,9 +112,9 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
 
                 // If --save/autosave on && no version specified, use the pinned version
                 // e.g: 'cordova platform add android --save', 'cordova platform update android --save'
-                if( (opts.save || autosave) && !spec ){
+                if( (opts.save) && !spec ){
                     spec = platforms[platform].version;
-                }
+                } 
 
                 if (spec) {
                     var maybeDir = cordova_util.fixRelativePath(spec);
@@ -209,7 +212,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                             platforms :[platform],
                             searchpath :opts.searchpath,
                             fetch: opts.fetch || false,
-                            save: opts.save || false
+                            save: opts.save || true,
+                            nosave: opts.nosave || false
                         };
                         return require('./cordova').raw.prepare(prepOpts);
                     }
@@ -224,7 +228,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     events.emit('verbose', 'Saving ' + platform + '@' + versionToSave + ' into platforms.json');
                     platformMetadata.save(projectRoot, platform, versionToSave);
 
-                    if(opts.save || autosave){
+                    if(opts.save && !opts.nosave) {
                         // Similarly here, we save the source location if that was specified, otherwise the version that
                         // was installed. However, we save it with the "~" attribute (this allows for patch updates).
                         spec = saveVersion ? '~' + platDetails.version : spec;
@@ -377,9 +381,7 @@ function remove(hooksRunner, projectRoot, targets, opts) {
             removePlatformPluginsJson(projectRoot, target);
         });
     }).then(function() {
-        var config_json = config.read(projectRoot);
-        var autosave =  config_json.auto_save_platforms || false;
-        if(opts.save || autosave){
+        if(opts.save && !opts.nosave){
             targets.forEach(function(target) {
                 var platformName = target.split('@')[0];
                 var xml = cordova_util.projectConfig(projectRoot);
@@ -639,7 +641,10 @@ function platform(command, targets, opts) {
             case 'check':
                 return check(hooksRunner, projectRoot);
             case 'save':
+                opts.nosave = false;
                 return save(hooksRunner, projectRoot, opts);
+            case 'nosave':
+                return;
             default:
                 return list(hooksRunner, projectRoot, opts);
         }
@@ -701,7 +706,8 @@ function installPluginsForNewPlatform(platform, projectRoot, opts) {
                 is_top_level: pluginMetadata.is_top_level,
                 force: opts.force,
                 fetch: opts.fetch || false,
-                save: opts.save || false
+                save: opts.save || true,
+                nosave: opts.nosave || false
             };
 
             var variables = pluginMetadata && pluginMetadata.variables;
