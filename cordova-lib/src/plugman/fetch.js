@@ -36,6 +36,8 @@ var shell   = require('shelljs'),
     fetch = require('cordova-fetch'),
     cordovaUtil = require('../cordova/util');
 
+var projectRoot;
+
 // Cache of PluginInfo objects for plugins in search path.
 var localPlugins = null;
 
@@ -120,7 +122,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
             if (fs.existsSync(plugin_dir)) {
 
                 if (options.fetch) {
-                    var projectRoot = path.join(plugins_dir, '..');
+                    projectRoot = path.join(plugins_dir, '..');
                     //Plugman projects need to go up two directories to reach project root. 
                     //Plugman projects have an options.projectRoot variable
                     if(options.projectRoot) {
@@ -193,7 +195,7 @@ function fetchPlugin(plugin_src, plugins_dir, options) {
                     }
                     //use cordova-fetch if --fetch was passed in
                     if(options.fetch) {
-                        var projectRoot = path.join(plugins_dir, '..');
+                        projectRoot = path.join(plugins_dir, '..');
                         //Plugman projects need to go up two directories to reach project root. 
                         //Plugman projects have an options.projectRoot variable
                         if(options.projectRoot) {

@@ -159,7 +159,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         if (opts.fetch) {
                             return fetch(spec, projectRoot, opts)
                             .then(function (directory) {
-                                return getPlatformDetailsFromDir(directory,platform)
+                                return getPlatformDetailsFromDir(directory,platform);
                             });
                         } else {
                             return getPlatformDetailsFromDir(maybeDir, platform);
