@@ -175,9 +175,9 @@ describe('(save flag)', function () {
         }, BIG_TIMEOUT);
 
         it('Test 005 : spec.2 should save platform to config', function (done) {
+
             helpers.removeEngine(appPath, platformName);
             mockDownloadPlatform(platformLocalPathNew, platformVersionNew);
-
             platform('add', platformName, { 'save': true })
             .then(function () {
                 expect(helpers.getEngineSpec(appPath, platformName)).toBe('~' + platformVersionNew);

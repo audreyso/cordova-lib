@@ -244,10 +244,7 @@ module.exports = function plugin(command, targets, opts) {
                                 } else {
                                     // Create package.json in cordova@7
                                 }
-<<<<<<< HEAD
-                                
-=======
->>>>>>>  fixfetch : (CB-12021), fixed fetch after rebase and merge from CB-11960
+
                                 // If package.json exists, the plugin object and plugin name 
                                 // will be added to package.json if not already there.
                                 if (!pkgJson) {
@@ -257,10 +254,6 @@ module.exports = function plugin(command, targets, opts) {
                                 pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
                                 // Plugin and variables are added.
                                 pkgJson.cordova.plugins[pluginInfo.id] = opts.cli_variables;
-<<<<<<< HEAD
-
-=======
->>>>>>>  fixfetch : (CB-12021), fixed fetch after rebase and merge from CB-11960
                                 events.emit('log','Adding '+pluginInfo.id+ ' to package.json');
                                 // Write to package.json
                                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
@@ -339,23 +332,10 @@ module.exports = function plugin(command, targets, opts) {
                                 }
                                 // If package.json exists and contains a specified plugin in cordova['plugins'], it will be removed    
                                 if(pkgJson !== undefined && pkgJson.cordova !== undefined && pkgJson.cordova.plugins !== undefined) {
-<<<<<<< HEAD
-<<<<<<< HEAD
                                     events.emit('log', 'Removing [' + target + '] from package.json');
                                     // Remove plugin from package.json
                                     delete pkgJson.cordova.plugins[target];
                                     //Write out new package.json with plugin removed correctly.
-=======
-                                    events.emit('log', 'Removing ' + target + ' from package.json');
-                                    delete pkgJson.cordova.plugins[target];
-                                    //Write out new package.json 
->>>>>>> CB-11960: Added support to package.json for platform/plugin add/rm
-=======
-                                    events.emit('log', 'Removing '  + target +  ' from package.json');
-                                    // Remove plugin from package.json
-                                    delete pkgJson.cordova.plugins[target];
-                                    //Write out new package.json with plugin removed correctly.
->>>>>>>  fixfetch : (CB-12021), fixed fetch after rebase and merge from CB-11960
                                     fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
                                 }
                             }
