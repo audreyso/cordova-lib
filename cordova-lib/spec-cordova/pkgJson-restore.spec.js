@@ -22,13 +22,7 @@
     events = require('cordova-common').events,
     ConfigParser = require('cordova-common').ConfigParser,
     cordova = require('../src/cordova/cordova'),
-    TIMEOUT = 60 * 1000,
-    fs = require('fs'),
-    Q = require('q'),
-    rewire = require('rewire'),
-    prepare = require('../src/cordova/prepare'),
-    platforms = require('../src/platforms/platforms'),
-    platform = rewire('../src/cordova/platform.js');
+    TIMEOUT = 60 * 1000;
 
 /** Testing will check if "cordova prepare" is restoring platforms and plugins as expected.
 *   Uses different basePkgJson files depending on testing expecations of what (platforms/plugins/variables)
@@ -42,7 +36,7 @@ describe('end-to-end tests platform/spec restore with --save', function () {
     var results;
 
     beforeEach(function() {
-        shell.rm('-rf', tpmDir);
+        shell.rm('-rf', tmpDir);
         // Copy then move because we need to copy everything, but that means it will copy the whole directory.
         // Using /* doesn't work because of hidden files.
         shell.cp('-R', path.join(__dirname, 'fixtures', 'basePkgJson'), tmpDir);
@@ -67,13 +61,6 @@ describe('end-to-end tests platform/spec restore with --save', function () {
         });
     }
 
-    function fullPlatformList() {
-        return cordova.raw.platform('list').then(function() {
-            var installed = results.match(/Installed platforms:\n  (.*)/);
-            expect(installed).toBeDefined();
-            expect(installed[1].indexOf(helpers.testPlatform)).toBeGreaterThan(-1);
-        });
-    }
     /** Test#000 will check that when a platform is added with a spec, it will 
     *   add to pkg.json with a '^' and to config.xml with a '~'. When prepare is run,
     *   pkg.json will have no change and config.xml (first char) will change from a '~' to a '^'.
@@ -218,7 +205,7 @@ describe('end-to-end tests platform/spec restore with --save', function () {
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             expect(pkgJson.cordova.platforms.indexOf('browser')).toBeDefined();
-            expect(pkgJson.dependencies['cordova-browser']).toEqual('git+https://github.com/apache/cordova-browser.git');
+            expect(pkgJson.dependencies['cordova-browser']).toEqual('^git+https://github.com/apache/cordova-browser.git');
             // Check that platform was restored to platform.json list successfully.
             delete require.cache[require.resolve(platformsFolderPath)];
             platformsJson = require(platformsFolderPath);
@@ -695,7 +682,7 @@ describe('update config.xml to include platforms in pkg.json', function () {
         });
         var configEngArray = engNames.slice();
 
-        // Expect that config.xml contains only android at this point (basePjgJson4)
+        // Expect that config.xml contains only android at this point (basePkgJson4)
         expect(configEngArray.indexOf('android')).toBeGreaterThan(-1);
         expect(configEngArray.indexOf('browser')).toEqual(-1);
         expect(configEngArray.length === 1);
@@ -1511,7 +1498,7 @@ describe('tests platform/spec restore with --save', function () {
             expect(err).toBeUndefined();
         }).fin(done);
     // Cordova prepare needs extra wait time to complete.
-},TIMEOUT);
+    },TIMEOUT);
 
     /** Test#002 will add two platforms to package.json with the 'save' flag.
     *   It will remove one platform from pkg.json without the 'save' flag and remove

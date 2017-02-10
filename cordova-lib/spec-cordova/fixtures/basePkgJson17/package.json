@@ -10,14 +10,14 @@
   "license": "ISC",
   "cordova": {
         "platforms": [
-            "browser"
+            "ios"
         ],
         "plugins": {
             "cordova-plugin-splashscreen": {}
         }
     },
     "dependencies": {
-        "cordova-browser": "^4.0.0",
+        "cordova-ios": "^4.2.1",
         "cordova-plugin-splashscreen": "~3.2.2"
     }
 }

@@ -230,10 +230,10 @@ describe('plugin end-to-end', function() {
     // Test #023 : if pkg.json and config.xml have no platforms/plugins/spec.
     // and --save --fetch is called, use the pinned version or plugin pkg.json version.
     it('Test#023 : use pinned/lastest version if there is no platform/plugin version passed in and no platform/plugin versions in pkg.json or config.xml', function(done) {
-        var browserPlatform = 'browser';
-        var browserVersion;
+        var iosPlatform = 'ios';
+        var iosVersion;
         var cwd = process.cwd();
-        var browserDirectory = path.join(cwd, 'platforms/browser/cordova/version');
+        var iosDirectory = path.join(cwd, 'platforms/ios/cordova/version');
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
         delete require.cache[require.resolve(pkgJsonPath)];
@@ -252,30 +252,30 @@ describe('plugin end-to-end', function() {
         expect(pkgJson.dependencies).toBeUndefined();
         // Config.xml has no platform or plugin or specs.
         expect(engines.length).toEqual(0);
-        // Add browser without version.
-        return cordova.raw.platform('add', ['browser'], {'save':true, 'fetch':true})
+        // Add ios without version.
+        return cordova.raw.platform('add', ['ios'], {'save':true, 'fetch':true})
         .then(function() {
             // Delete any previous caches of require(package.json).
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            // Pkg.json has browser.
-            expect(pkgJson.cordova.platforms).toEqual([browserPlatform]);
-            // Config.xml and browser/cordova/version check.
+            // Pkg.json has ios.
+            expect(pkgJson.cordova.platforms).toEqual([iosPlatform]);
+            // Config.xml and ios/cordova/version check.
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
-            // browser platform has been added to config.xml.
+            // ios platform has been added to config.xml.
             expect(engines.length).toEqual(1);
-            // Config.xml has browser platform.
+            // Config.xml has ios platform.
             engNames = engines.map(function(elem) {
                 return elem.name;
             });
-            expect(engNames).toEqual([ 'browser' ]);
-            // delete previous caches of browserVersion;
-            delete require.cache[require.resolve(browserDirectory)];
-            browserVersion = require(browserDirectory);
+            expect(engNames).toEqual([ 'ios' ]);
+            // delete previous caches of iosVersion;
+            delete require.cache[require.resolve(iosDirectory)];
+            iosVersion = require(iosDirectory);
             engSpec = engines.map(function(elem) {
-                // Check that config and browser/cordova/version versions "satisfy" each other.
-                expect(semver.satisfies(browserVersion.version, elem.spec)).toEqual(true);
+                // Check that config and ios/cordova/version versions "satify" each other.
+                expect(semver.satisfies(iosVersion.version, elem.spec)).toEqual(true);
             });
         }).then(function() {
             // Add camera plugin with --save --fetch.
@@ -294,7 +294,7 @@ describe('plugin end-to-end', function() {
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             // Check that pkg.json and plugin pkg.json versions "satisfy".
-            expect(semver.satisfies(pluginPkgJsonVersion.version, pkgJson.dependencies['cordova-browser']));
+            expect(semver.satisfies(pluginPkgJsonVersion.version, pkgJson.dependencies['cordova-ios']));
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -305,7 +305,7 @@ describe('plugin end-to-end', function() {
     it('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function (done) {
 
         var cwd = process.cwd();
-        var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/cordova-browser');
+        var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/cordova-ios');
         var pluginPath = path.join(testRunRoot,'spec-cordova/fixtures/plugins/fake1');
         var pkgJsonPath = path.join(cwd,'package.json');
         var pkgJson;
@@ -317,10 +317,10 @@ describe('plugin end-to-end', function() {
             // Delete any previous caches of require(package.json).
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            // Pkg.json has browser.
-            expect(pkgJson.cordova.platforms).toEqual(['browser']);
+            // Pkg.json has ios.
+            expect(pkgJson.cordova.platforms).toEqual(['ios']);
             // Pkg.json has platform local path spec.
-            expect(pkgJson.dependencies['cordova-browser'].includes(platformPath)).toEqual(true);
+            expect(pkgJson.dependencies['cordova-ios'].includes(platformPath)).toEqual(true);
         }).then(function() {
             // Run cordova plugin add local path --save --fetch.
             return cordova.raw.plugin('add', pluginPath, {'save':true, 'fetch':true});
@@ -604,10 +604,10 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
     *   are updated with the correct (platform and plugin) specs from pkg.json.
     */
     it('Test#020 : During add, if pkg.json has a spec, use that one.', function(done) {
-        var browserPlatform = 'browser';
-        var browserVersion;
+        var iosPlatform = 'ios';
+        var iosVersion;
         var cwd = process.cwd();
-        var browserDirectory = path.join(cwd, 'platforms/browser/cordova/version');
+        var iosDirectory = path.join(cwd, 'platforms/ios/cordova/version');
         var platformsFolderPath = path.join(cwd,'platforms/platforms.json');
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
@@ -622,50 +622,50 @@ describe('During add, if pkg.json has a platform/plugin spec, use that one.', fu
         var pluginPkgJsonDir = path.join(cwd, 'plugins/cordova-plugin-splashscreen/package.json');
         var pluginPkgJsonVersion;
 
-        // Pkg.json has browser and spec '^4.1.0' and splashscreen '^3.2.2'.
-        expect(pkgJson.cordova.platforms).toEqual([ browserPlatform ]);
-        expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-splashscreen' : '^3.2.2', 'cordova-browser' : '^4.1.0' });
+        // Pkg.json has ios and spec '^4.2.1' and splashscreen '^3.2.2'.
+        expect(pkgJson.cordova.platforms).toEqual([ iosPlatform ]);
+        expect(pkgJson.dependencies).toEqual({ 'cordova-plugin-splashscreen' : '^3.2.2', 'cordova-ios' : '^4.2.1' });
         // Config.xml has no platforms or plugins yet.
         expect(engines.length).toEqual(0);
         expect(configPlugins.length).toEqual(0);
 
         emptyPlatformList().then(function() {
-            // Add browser with --save and --fetch.
-            return cordova.raw.platform('add', [browserPlatform], {'save':true , 'fetch':true});
+            // Add ios with --save and --fetch.
+            return cordova.raw.platform('add', [iosPlatform], {'save':true , 'fetch':true});
         }).then(function() {
-            // Require platformsFolderPath, browser and spec should be in there.
+            // Require platformsFolderPath, ios and spec should be in there.
             delete require.cache[require.resolve(platformsFolderPath)];
             platformsJson = require(platformsFolderPath);
             // Delete any previous caches of require(package.json).
-            // browser has been added.
+            // ios has been added.
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            // No change to pkg.json platforms or spec for browser.
-            expect(pkgJson.cordova.platforms).toEqual([browserPlatform]);
-            // Config.xml and browser/cordova/version check.
+            // No change to pkg.json platforms or spec for ios.
+            expect(pkgJson.cordova.platforms).toEqual([iosPlatform]);
+            // Config.xml and ios/cordova/version check.
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
-            // browser platform has been added to config.xml.
+            // ios platform has been added to config.xml.
             expect(engines.length).toEqual(1);
             engNames = engines.map(function(elem) {
-                // browser is added to config
-                expect(elem.name).toEqual(browserPlatform);
+                // ios is added to config
+                expect(elem.name).toEqual(iosPlatform);
                 return elem.name;
             });
             engSpec = engines.map(function(elem) {
-                // Check that config and browser/cordova/version versions "satify" each other.
-                delete require.cache[require.resolve(browserDirectory)];
-                browserVersion = require(browserDirectory);
-                expect(semver.satisfies(browserVersion.version, elem.spec)).toEqual(true);
+                // Check that config and ios/cordova/version versions "satify" each other.
+                delete require.cache[require.resolve(iosDirectory)];
+                iosVersion = require(iosDirectory);
+                expect(semver.satisfies(iosVersion.version, elem.spec)).toEqual(true);
                 // Check that config and platforms.json "satisfy".
-                expect(semver.satisfies(platformsJson[browserPlatform], elem.spec)).toEqual(true);
+                expect(semver.satisfies(platformsJson[iosPlatform], elem.spec)).toEqual(true);
             });
-            // Config.xml added browser platform.
-            expect(engNames).toEqual([ 'browser' ]);
-            // Check that pkg.json and browser/cordova/version versions "satisfy" each other.
-            expect(semver.satisfies(browserVersion.version, pkgJson.dependencies['cordova-browser'])).toEqual(true);
+            // Config.xml added ios platform.
+            expect(engNames).toEqual([ 'ios' ]);
+            // Check that pkg.json and ios/cordova/version versions "satisfy" each other.
+            expect(semver.satisfies(iosVersion.version, pkgJson.dependencies['cordova-ios'])).toEqual(true);
             // Check that pkg.json and platforms.json "satisfy".
-            expect(semver.satisfies(platformsJson[browserPlatform], pkgJson.dependencies['cordova-browser'])).toEqual(true);
+            expect(semver.satisfies(platformsJson[iosPlatform], pkgJson.dependencies['cordova-ios'])).toEqual(true);
         }).then(function() {
             // Add splashscreen plugin with --save --fetch.
             return cordova.raw.plugin('add', 'cordova-plugin-splashscreen', {'save':true, 'fetch':true});
@@ -719,10 +719,10 @@ describe('During add, if config.xml has a platform/plugin spec and pkg.json does
     *   and cordova platform ls are updated with the correct platform/plugin spec from config.xml.
     */
     it('Test#021 : If config.xml has a spec (and none was specified and pkg.json does not have one), use config.', function(done) {
-        var browserPlatform = 'browser';
-        var browserVersion;
+        var iosPlatform = 'ios';
+        var iosVersion;
         var cwd = process.cwd();
-        var browserDirectory = path.join(cwd, 'platforms/browser/cordova/version');
+        var iosDirectory = path.join(cwd, 'platforms/ios/cordova/version');
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
         var cfg = new ConfigParser(configXmlPath);
@@ -735,33 +735,33 @@ describe('During add, if config.xml has a platform/plugin spec and pkg.json does
         var pluginPkgJsonDir = path.join(cwd, 'plugins/cordova-plugin-splashscreen/package.json');
         var pluginPkgJsonVersion;
 
-        // Pkg.json does not have platform or spec yet. Config.xml has browser and spec '^4.1.0'.
+        // Pkg.json does not have platform or spec yet. Config.xml has ios and spec '~4.2.1'.
         // Remove for testing purposes so platform is not pre-installed.
-        cordova.raw.platform('rm', [browserPlatform], {'save':true});
+        cordova.raw.platform('rm', [iosPlatform], {'save':true});
         emptyPlatformList().then(function() {
-            // Add browser with --save and --fetch.
-            return cordova.raw.platform('add', [browserPlatform], {'save':true , 'fetch':true});
+            // Add ios with --save and --fetch.
+            return cordova.raw.platform('add', [iosPlatform], {'save':true , 'fetch':true});
         }).then(function() {
             // Delete any previous caches of require(package.json).
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             // pkg.json has new platform.
-            expect(pkgJson.cordova.platforms).toEqual([browserPlatform]);
-            // Config.xml and browser/cordova/version check.
+            expect(pkgJson.cordova.platforms).toEqual([iosPlatform]);
+            // Config.xml and ios/cordova/version check.
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
-            // browser platform is in config.xml.
+            // ios platform is in config.xml.
             expect(engines.length).toEqual(1);
             engNames = engines.map(function(elem) {
                 return elem.name;
             });
-            // Config.xml has browser platform.
-            expect(engNames).toEqual([ 'browser' ]);
+            // Config.xml has ios platform.
+            expect(engNames).toEqual([ 'ios' ]);
             engSpec = engines.map(function(elem) {
-                delete require.cache[require.resolve(browserDirectory)];
-                browserVersion = require(browserDirectory);
-                // Config and browser/cordova/version versions "satisfy" each other.
-                expect(semver.satisfies(browserVersion.version, elem.spec)).toEqual(true);
+                delete require.cache[require.resolve(iosDirectory)];
+                iosVersion = require(iosDirectory);
+                // Config and ios/cordova/version versions "satisfy" each other.
+                expect(semver.satisfies(iosVersion.version, elem.spec)).toEqual(true);
             });
         }).then(function() {
             // Add splashscreen with --save --fetch.
@@ -785,7 +785,8 @@ describe('During add, if config.xml has a platform/plugin spec and pkg.json does
     },60000); 
 });
 
-// Test #022 : use basePkgJson17 (config.xml and pkg.json each have browser platform with different specs).
+
+// Test #022 : use basePkgJson17 (config.xml and pkg.json each have ios platform with different specs).
 describe('During add, if add specifies a platform spec, use that one regardless of what is in pkg.json or config.xml', function () {
     var tmpDir = helpers.tmpDir('platform_test_pkgjson');
     var project = path.join(tmpDir, 'project');
@@ -821,10 +822,10 @@ describe('During add, if add specifies a platform spec, use that one regardless 
     *   regardless of what is in package.json or config.xml.
     */
     it('Test#022 : when adding with a specific platform version, always use that one.', function(done) {
-        var browserPlatform = 'browser';
-        var browserVersion;
+        var iosPlatform = 'ios';
+        var iosVersion;
         var cwd = process.cwd();
-        var browserDirectory = path.join(cwd, 'platforms/browser/cordova/version');
+        var iosDirectory = path.join(cwd, 'platforms/ios/cordova/version');
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
         delete require.cache[require.resolve(pkgJsonPath)];
@@ -837,36 +838,36 @@ describe('During add, if add specifies a platform spec, use that one regardless 
         var pluginPkgJsonDir = path.join(cwd, 'plugins/cordova-plugin-splashscreen/package.json');
         var pluginPkgJsonVersion;
 
-        // Pkg.json has browser and spec '^4.0.0'.
-        expect(pkgJson.cordova.platforms).toEqual([ browserPlatform ]);
-        expect(pkgJson.dependencies).toEqual({ 'cordova-browser' : '^4.0.0', 'cordova-plugin-splashscreen' : '~3.2.2' });
-        // Config.xml has browser and spec ~4.0.0.
+        // Pkg.json has ios and spec '^4.2.1'.
+        expect(pkgJson.cordova.platforms).toEqual([ iosPlatform ]);
+        expect(pkgJson.dependencies).toEqual({ 'cordova-ios' : '^4.2.1', 'cordova-plugin-splashscreen' : '~3.2.2' });
+        // Config.xml has ios and spec ~4.2.1.
         expect(engines.length).toEqual(1);
-        expect(engines).toEqual([ { name: 'browser', spec: '~4.0.0' } ]);
+        expect(engines).toEqual([ { name: 'ios', spec: '~4.2.1' } ]);
         emptyPlatformList().then(function() {
-            // Add browser with --save and --fetch.
-            return cordova.raw.platform('add', ['browser@3.6.0'], {'save':true , 'fetch':true});
+            // Add ios with --save and --fetch.
+            return cordova.raw.platform('add', ['ios@4.3.0'], {'save':true , 'fetch':true});
         }).then(function() {
             // Delete any previous caches of require(package.json).
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
-            // Pkg.json has browser.
-            expect(pkgJson.cordova.platforms).toEqual([browserPlatform]);
-            // Config.xml and browser/cordova/version check.
+            // Pkg.json has ios.
+            expect(pkgJson.cordova.platforms).toEqual([iosPlatform]);
+            // Config.xml and ios/cordova/version check.
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
-            // browser platform has been added to config.xml.
+            // ios platform has been added to config.xml.
             expect(engines.length).toEqual(1);
             engNames = engines.map(function(elem) {
                 return elem.name;
             });
-            // Config.xml has browser platform.
-            expect(engNames).toEqual([ 'browser' ]);
-            // delete previous caches of browserVersion;
-            delete require.cache[require.resolve(browserDirectory)];
-            browserVersion = require(browserDirectory);
-            // Check that pkg.json and browser/cordova/version versions "satisfy" each other.
-            expect(semver.satisfies(browserVersion.version, pkgJson.dependencies['cordova-browser'])).toEqual(true);
+            // Config.xml has ios platform.
+            expect(engNames).toEqual([ 'ios' ]);
+            // delete previous caches of iosVersion;
+            delete require.cache[require.resolve(iosDirectory)];
+            iosVersion = require(iosDirectory);
+            // Check that pkg.json and ios/cordova/version versions "satisfy" each other.
+            expect(semver.satisfies(iosVersion.version, pkgJson.dependencies['cordova-ios'])).toEqual(true);
         }).then(function() {
             // Add splashscreen with --save --fetch.
             return cordova.raw.plugin('add', 'cordova-plugin-splashscreen@4.0.0', {'save':true, 'fetch':true});
@@ -885,7 +886,7 @@ describe('During add, if add specifies a platform spec, use that one regardless 
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             // Check that pkg.json and plugin pkg.json versions "satisfy".
-            expect(semver.satisfies(pluginPkgJsonVersion.version, pkgJson.dependencies['cordova-browser']));
+            expect(semver.satisfies(pluginPkgJsonVersion.version, pkgJson.dependencies['cordova-ios']));
         }).fail(function(err) {
             expect(err).toBeUndefined();
         }).fin(done);
@@ -925,19 +926,19 @@ describe('local path is added to config.xml without pkg.json', function () {
         var engines = cfg.getEngines();
         var engNames;
         var engSpec;
-        var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/cordova-browser');
+        var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/cordova-ios');
 
         // Run cordova platform add local path --save --fetch.
         return cordova.raw.platform('add', platformPath, {'save':true, 'fetch':true})
         .then(function() {
             var cfg2 = new ConfigParser(configXmlPath);
             engines = cfg2.getEngines();
-            // browser platform and spec have been added to config.xml.
+            // ios platform and spec have been added to config.xml.
             engNames = engines.map(function(elem) {
                 return elem.name;
             });
             engSpec = engines.map(function(elem) {  
-                if (elem.name === 'browser') {
+                if (elem.name === 'ios') {
                     expect(elem.spec.includes(platformPath)).toEqual(true);
                 }
             });
@@ -970,5 +971,3 @@ describe('local path is added to config.xml without pkg.json', function () {
         }).fin(done);
     },60000);
 });
-
-

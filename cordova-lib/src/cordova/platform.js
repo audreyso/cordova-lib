@@ -84,10 +84,8 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
     return hooksRunner.fire('before_platform_' + cmd, opts)
     .then(function() {
         
-        var platformsToSave = []; 
-
+        var platformsToSave = [];
         // If statement to see if pkgJsonPath exists in the filesystem
-        var modifiedPkgJson = false;
         var pkgJson;
         var pkgJsonPath = path.join(projectRoot, 'package.json');
         // If statement to see if pkgJsonPath exists in the filesystem
@@ -280,22 +278,20 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                         cfg.removeEngine(platform);
                         cfg.addEngine(platform, spec);
                         cfg.write();
-                        //save to add to pacakge.json's cordova.platforms array in the next then
+                        
+                        // Save to add to package.json's cordova.platforms array in the next then.
                         platformsToSave.push(platform);
                     }
                 });
             });
-        }).then(function() {
+        }).then(function() { 
             var pkgJson;
             var pkgJsonPath = path.join(projectRoot, 'package.json');
             var modifiedPkgJson = false;
             if(fs.existsSync(pkgJsonPath)) {
                 delete require.cache[require.resolve(pkgJsonPath)]; 
                 pkgJson = require(pkgJsonPath);
-            } else {
-                // TODO: Create package.json in cordova@7
             }
-
             if (pkgJson === undefined) {
                 return;
             }
@@ -314,8 +310,7 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
                     } 
                 });
             }
-
-        }).then(function(){
+            // Save to package.json.
             if (modifiedPkgJson === true) {
                 pkgJson.cordova.platforms = pkgJson.cordova.platforms.sort();
                 fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
@@ -404,18 +399,15 @@ function platformFromName(name) {
 // Returns a Promise
 // Gets platform details from a directory
 function getPlatformDetailsFromDir(dir, platformIfKnown){
-    var libDir = path.resolve(dir);
-    var platform;
-    var version;
+   var libDir = path.resolve(dir);
+   var platform;
+   var version;
 
-    try {
-        var pkgPath = path.join(libDir, 'package.json');
-        delete require.cache[pkgPath];
-        var pkg = require(pkgPath);
-
-        platform = platformFromName(pkg.name);
-        version = pkg.version;
-    } catch(e) {
+   try {
+       var pkg = require(path.join(libDir, 'package'));
+       platform = platformFromName(pkg.name);
+       version = pkg.version;
+   } catch(e) {
         // Older platforms didn't have package.json.
         platform = platformIfKnown || platformFromName(path.basename(dir));
         var verFile = fs.existsSync(path.join(libDir, 'VERSION')) ? path.join(libDir, 'VERSION') :
