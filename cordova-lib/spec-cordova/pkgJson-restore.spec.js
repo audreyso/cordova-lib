@@ -205,7 +205,7 @@ describe('end-to-end tests platform/spec restore with --save', function () {
             delete require.cache[require.resolve(pkgJsonPath)];
             pkgJson = require(pkgJsonPath);
             expect(pkgJson.cordova.platforms.indexOf('browser')).toBeDefined();
-            expect(pkgJson.dependencies['cordova-browser']).toEqual('^git+https://github.com/apache/cordova-browser.git');
+            expect(pkgJson.dependencies['cordova-browser']).toEqual('git+https://github.com/apache/cordova-browser.git');
             // Check that platform was restored to platform.json list successfully.
             delete require.cache[require.resolve(platformsFolderPath)];
             platformsJson = require(platformsFolderPath);
