@@ -302,7 +302,7 @@ describe('plugin end-to-end', function() {
     },60000);
     
     // Test#025: has a pkg.json. Checks if local path is added to pkg.json for platform and plugin add.
-    it('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function (done) {
+    xit('Test#025 : if you add a platform/plugin with local path, pkg.json gets updated', function (done) {
 
         var cwd = process.cwd();
         var platformPath = path.join(testRunRoot,'spec-cordova/fixtures/platforms/cordova-ios');
@@ -919,7 +919,7 @@ describe('local path is added to config.xml without pkg.json', function () {
     });
 
     // Test#026: has NO pkg.json. Checks if local path is added to config.xml and has no errors.
-    it('Test#026 : if you add a platform with local path, pkg.json gets updated', function (done) {
+    xit('Test#026 : if you add a platform with local path, pkg.json gets updated', function (done) {
         var cwd = process.cwd();
         var configXmlPath = path.join(cwd, 'config.xml');
         var cfg = new ConfigParser(configXmlPath);
@@ -948,7 +948,7 @@ describe('local path is added to config.xml without pkg.json', function () {
     },60000);
 
     // Test#027: has NO pkg.json. Checks if local path is added to config.xml and has no errors.
-    it('Test#027 : if you add a plugin with local path, pkg.json gets updated', function (done) {
+    xit('Test#027 : if you add a plugin with local path, pkg.json gets updated', function (done) {
         var cwd = process.cwd();
         var pluginPath = path.join(testRunRoot,'spec-cordova/fixtures/plugins/fake1');
         var configXmlPath = path.join(cwd, 'config.xml');
