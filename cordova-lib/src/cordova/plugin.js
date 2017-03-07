@@ -249,6 +249,18 @@ module.exports = function plugin(command, targets, opts) {
                                 if (!pkgJson) {
                                     return;
                                 }
+
+                                // config.xml id value should be the pkgJson name value
+                                if((cfg.packageName()) && (pkgJson.name === undefined || pkgJson.name !== cfg.packageName())) {
+                                    pkgJson.name = cfg.packageName();
+                                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                                }
+                                // config.xml name value should be the pkgJson displayName value
+                                if((cfg.name()) && (pkgJson.displayName === undefined || pkgJson.displayName !== cfg.name())) {
+                                    pkgJson.displayName = cfg.name();
+                                    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4), 'utf8');
+                                }
+
                                 pkgJson.cordova = pkgJson.cordova || {};
                                 pkgJson.cordova.plugins = pkgJson.cordova.plugins || {};
                                 // Plugin and variables are added.

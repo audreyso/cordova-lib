@@ -280,6 +280,16 @@ function addHelper(cmd, hooksRunner, projectRoot, targets, opts) {
             if (pkgJson === undefined) {
                 return;
             }
+            // config.xml id value should be the pkgJson name value
+            if((cfg.packageName()) && (pkgJson.name === undefined || pkgJson.name !== cfg.packageName())) {
+                pkgJson.name = cfg.packageName();
+                modifiedPkgJson = true;
+            }
+            // config.xml name value should be the pkgJson displayName value
+            if((cfg.name()) && (pkgJson.displayName === undefined || pkgJson.displayName !== cfg.name())) {
+                pkgJson.displayName = cfg.name();
+                modifiedPkgJson = true;
+            }
             if (pkgJson.cordova === undefined) {
                 pkgJson.cordova = {};
             }
