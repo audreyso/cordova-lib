@@ -25,14 +25,6 @@
         "apiCompatibleSince": "5.0.0",
         "deprecated": false
     },
-    "ubuntu": {
-        "hostos": ["linux"],
-        "parser_file": "../cordova/metadata/ubuntu_parser",
-        "handler_file": "../plugman/platforms/ubuntu",
-        "url": "https://git-wip-us.apache.org/repos/asf?p=cordova-ubuntu.git",
-        "version": "~4.3.4",
-        "deprecated": false
-    },
     "wp8": {
         "hostos": ["win32"],
         "parser_file": "../cordova/metadata/wp8_parser",
