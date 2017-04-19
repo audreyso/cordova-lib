@@ -6,9 +6,7 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -130,7 +128,7 @@ describe('plugin end-to-end', function() {
         expect(errorHandler.errorCallback).not.toHaveBeenCalled();
     });
 
-    it('Test 001 : should successfully add and remove a plugin with no options', function(done) {
+    xit('Test 001 : should successfully add and remove a plugin with no options', function(done) {
         addPlugin(path.join(pluginsDir, 'fake1'), pluginId, {}, done)
         .then(function() {
             expect(install.runInstall).toHaveBeenCalled();
@@ -186,7 +184,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('Test 006 : should successfully add a plugin when specifying CLI variables', function(done) {
+    xit('Test 006 : should successfully add a plugin when specifying CLI variables', function(done) {
         addPlugin(path.join(pluginsDir, org_test_defaultvariables), org_test_defaultvariables, {cli_variables: { REQUIRED:'yes', REQUIRED_ANDROID:'yes'}}, done)
         .fail(function(err) {
             expect(err).toBeUndefined();
@@ -194,7 +192,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('Test 007 : should not check npm info when using the searchpath flag', function(done) {
+    xit('Test 007 : should not check npm info when using the searchpath flag', function(done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
         spyOn(registry, 'info');
         return addPlugin(npmInfoTestPlugin, npmInfoTestPlugin, {searchpath: pluginsDir}, done)
@@ -209,7 +207,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('Test 008 : should not check npm info when using the noregistry flag', function(done) {
+    xit('Test 008 : should not check npm info when using the noregistry flag', function(done) {
         mockPluginFetch(npmInfoTestPlugin, path.join(pluginsDir, npmInfoTestPlugin));
 
         spyOn(registry, 'info');
@@ -226,7 +224,7 @@ describe('plugin end-to-end', function() {
         .fin(done);
     }, 30000);
 
-    it('Test 009 : should not check npm info when fetching from a Git repository', function(done) {
+    xit('Test 009 : should not check npm info when fetching from a Git repository', function(done) {
         spyOn(registry, 'info');
         addPlugin(testGitPluginRepository, testGitPluginId, {}, done)
         .then(function() {

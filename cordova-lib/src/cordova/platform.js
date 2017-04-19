@@ -640,9 +640,6 @@ function addDeprecatedInformationToPlatforms(platformsList){
     return platformsList;
 }
 
-/**
- * Handles all cordova platform commands. 
->>>>>>> CB-12361: starting to seperate integration tests, writing new unit tests for platform.js
 
 /**
  * Handles all cordova platform commands. 

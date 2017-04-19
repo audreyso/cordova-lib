@@ -34,8 +34,10 @@ var cordova_util  = require('./util'),
     chainMap      = require('../util/promise-util').Q_chainmap,
     pkgJson       = require('../../package.json'),
     semver        = require('semver'),
-    opener        = require('opener');
-
+    HooksRunner = require('../hooks/HooksRunner'),
+    opener        = require('opener'),
+    cfg;
+    
 // For upper bounds in cordovaDependencies
 var UPPER_BOUND_REGEX = /^<\d+\.\d+\.\d+$/;
 // Returns a promise.
@@ -65,9 +67,6 @@ module.exports = function plugin(command, targets, opts) {
         }
         opts.options = opts.options || [];
         opts.plugins = [];
-
-        // TODO: Otherwise HooksRunner will be Object instead of function when run from tests - investigate why
-        var HooksRunner = require('../hooks/HooksRunner');
         var hooksRunner = new HooksRunner(projectRoot);
         var config_json = config.read(projectRoot);
         var platformList = cordova_util.listPlatforms(projectRoot);
@@ -104,7 +103,7 @@ module.exports = function plugin(command, targets, opts) {
                 }
 
                 var xml = cordova_util.projectConfig(projectRoot);
-                var cfg = new ConfigParser(xml);
+                cfg = new ConfigParser(xml);
                 var searchPath = config_json.plugin_search_path || [];
                 if (typeof opts.searchpath == 'string') {
                     searchPath = opts.searchpath.split(path.delimiter).concat(searchPath);
@@ -348,8 +347,8 @@ module.exports = function plugin(command, targets, opts) {
                     // CB-11022 We do not need to run prepare after plugin install until shouldRunPrepare flag is set to true
                     if (!shouldRunPrepare) {
                         return Q();
-                    }   
-
+                    }
+                    
                     return require('./prepare').preparePlatforms(platformList, projectRoot, opts);
                 }).then(function() {
                     opts.cordova = { plugins: cordova_util.findPlugins(pluginPath) };
@@ -534,6 +533,8 @@ function getPluginVariables(variables){
     return result;
 }
 
+module.exports.getPluginVariables = getPluginVariables;
+
 function getVersionFromConfigFile(plugin, cfg){
     var parsedSpec = pluginSpec.parse(plugin);
     var pluginEntry = cfg.getPlugin(parsedSpec.id);
@@ -599,11 +600,15 @@ function getInstalledPlugins(projectRoot) {
     return pluginInfoProvider.getAllWithinSearchPath(pluginsDir);
 }
 
+module.exports.getInstalledPlugins = getInstalledPlugins;
+
 function saveToConfigXmlOn(config_json, options){
     options = options || {};
     var autosave =  config_json.auto_save_plugins || false;
     return autosave || options.save;
 }
+
+module.exports.saveToConfigXmlOn = saveToConfigXmlOn;
 
 function parseSource(target, opts) {
     var url = require('url');
@@ -618,6 +623,8 @@ function parseSource(target, opts) {
     }
     return null;
 }
+
+module.exports.parseSource = parseSource;
 
 function getSpec(pluginSource, projectRoot, pluginName) {
     if (pluginSource.hasOwnProperty('url') || pluginSource.hasOwnProperty('path')) {
@@ -676,6 +683,7 @@ function versionString(version) {
     return null;
 }
 
+module.exports.versionString = versionString;
 /**
  * Gets the version of a plugin that should be fetched for a given project based
  * on the plugin's engine information from NPM and the platforms/plugins installed
@@ -732,6 +740,7 @@ function findVersion(versions, version) {
     return null;
 }
 
+module.exports.findVersion = findVersion;
 /*
  * The engine entry maps plugin versions to constraints like so:
  *  {
@@ -911,3 +920,6 @@ function listUnmetRequirements(name, failedRequirements) {
         events.emit('warn', '    ' + req.dependency + ' (' + req.installed + ' in project, ' + req.required + ' required)');
     });
 }
+
+module.exports.listUnmetRequirements = listUnmetRequirements;
+module.exports.save = save;
