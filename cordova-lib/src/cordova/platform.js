@@ -642,6 +642,10 @@ function addDeprecatedInformationToPlatforms(platformsList){
 
 /**
  * Handles all cordova platform commands. 
+>>>>>>> CB-12361: starting to seperate integration tests, writing new unit tests for platform.js
+
+/**
+ * Handles all cordova platform commands. 
  * @param {string} command - Command to execute (add, rm, ls, update, save)
  * @param {Object[]} targets - Array containing platforms to execute commands on
  * @param {Object} opts
