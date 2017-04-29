@@ -225,11 +225,12 @@ describe('plugin end-to-end', function() {
     }, TIMEOUT);
     // Test #023 : if pkg.json and config.xml have no platforms/plugins/spec.
     // and --save --fetch is called, use the pinned version or plugin pkg.json version.
-    it('Test#023 : use pinned/lastest version if there is no platform/plugin version passed in and no platform/plugin versions in pkg.json or config.xml', function(done) {
+    fit('Test#023 : use pinned/lastest version if there is no platform/plugin version passed in and no platform/plugin versions in pkg.json or config.xml', function(done) {
         var iosPlatform = 'ios';
         var iosVersion;
         var cwd = process.cwd();
         var iosDirectory = path.join(cwd, 'platforms/ios/cordova/version');
+        var iosJsonPath = path.join(cwd, 'platforms/ios/ios.json');
         var configXmlPath = path.join(cwd, 'config.xml');
         var pkgJsonPath = path.join(cwd,'package.json');
         var pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -274,6 +275,8 @@ describe('plugin end-to-end', function() {
             // Add geolocation plugin with --save --fetch.
             return cordova.raw.plugin('add', 'cordova-plugin-geolocation', {'save':true, 'fetch':true});
         }).then(function() {
+            var iosJson = cordova_util.requireNoCache(iosJsonPath);
+            expect(iosJson.installed_plugins['cordova-plugin-geolocation']).toBeDefined();
             var cfg3 = new ConfigParser(configXmlPath);
             // Check config.xml for plugins and spec.
             configPlugins = cfg3.getPluginIdList();
