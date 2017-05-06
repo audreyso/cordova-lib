@@ -226,7 +226,7 @@ describe('(save flag)', function () {
             });
         }, TIMEOUT);
 
-        it('Test 008 : spec.5 should fail and should not update config if invalid version is specified', function (done) {
+        xit('Test 008 : spec.5 should fail and should not update config if invalid version is specified', function (done) {
             helpers.removeEngine(appPath, platformName);
 
             platform('add', platformName + '@3.969.696', { 'save': true })
@@ -239,8 +239,9 @@ describe('(save flag)', function () {
                 done();
             });
         }, TIMEOUT);
-
-        it('Test 009 : spec.6 should save local path as spec if added using only local path', function (done) {
+        
+        // tested in platform1.spec
+        xit('Test 009 : spec.6 should save local path as spec if added using only local path', function (done) {
             helpers.removeEngine(appPath, platformName);
 
             platform('add', platformLocalPathNewer, { 'save': true })
@@ -253,8 +254,9 @@ describe('(save flag)', function () {
                 done();
             });
         }, TIMEOUT);
-
-        it('Test 010 : spec.7 should save git url with git ref properly', function (done) {
+        
+        // tested in platform1.spec
+        xit('Test 010 : spec.7 should save git url with git ref properly', function (done) {
             var platformUrl = platformGitUrl + '#' + platformGitRef;
             helpers.removeEngine(appPath, platformName);
             mockDownloadPlatform(platformLocalPathNew, platformVersionNew);
@@ -274,7 +276,7 @@ describe('(save flag)', function () {
     });
 
     describe('platform remove --save', function () {
-        it('Test 011 : spec.8 should not update config if there is no engine in it', function (done) {
+        xit('Test 011 : spec.8 should not update config if there is no engine in it', function (done) {
             helpers.removeEngine(appPath, platformName);
 
             platform('add', platformLocalPathNewer)
@@ -290,7 +292,7 @@ describe('(save flag)', function () {
             });
         }, TIMEOUT);
 
-        it('Test 012 : spec.9 should remove engine from config', function (done) {
+        xit('Test 012 : spec.9 should remove engine from config', function (done) {
             helpers.setEngineSpec(appPath, platformName, platformLocalPathNewer);
 
             platform('add', platformLocalPathNewer)
