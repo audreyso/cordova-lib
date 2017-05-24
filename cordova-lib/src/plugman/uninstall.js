@@ -68,7 +68,6 @@ function uninstall(platform, project_dir, id, plugins_dir, options) {
 module.exports.uninstallPlatform = function(platform, project_dir, id, plugins_dir, options) {
     project_dir = cordovaUtil.convertToRealPathSafe(project_dir);
     plugins_dir = cordovaUtil.convertToRealPathSafe(plugins_dir);
-
     options = options || {};
     options.is_top_level = true;
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
@@ -103,18 +102,14 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
     options = options || {};
     options.pluginInfoProvider = options.pluginInfoProvider || new PluginInfoProvider();
     var pluginInfoProvider = options.pluginInfoProvider;
-
     var plugin_dir = path.join(plugins_dir, id);
-
     // @tests - important this event is checked spec/uninstall.spec.js
     events.emit('log', 'Removing "'+ id +'"');
-
     // If already removed, skip.
     if ( !fs.existsSync(plugin_dir) ) {
         events.emit('verbose', 'Plugin "'+ id +'" already removed ('+ plugin_dir +')');
         return Q();
     }
-
     /*
      * Deletes plugin from plugins directory and 
      * node_modules directory if --fetch was supplied.
@@ -147,7 +142,6 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
     // anything depends on them, or if they're listed as top-level.
     // If neither, they can be deleted.
     var top_plugin_id = id;
-
     // Recursively remove plugins which were installed as dependents (that are not top-level)
     var toDelete = [];
     function findDependencies(pluginId) {
@@ -169,7 +163,6 @@ module.exports.uninstallPlugin = function(id, plugins_dir, options) {
     }
     findDependencies(top_plugin_id);
     toDelete.push(top_plugin_id);
-
     // Okay, now we check if any of these are depended on, or top-level.
     // Find the installed platforms by whether they have a metadata file.
     var platforms = Object.keys(platform_modules).filter(function(platform) {
@@ -317,6 +310,7 @@ function runUninstallPlatform(actions, platform, project_dir, plugin_dir, plugin
         return handleUninstall(actions, platform, pluginInfo, project_dir, options.www_dir, plugins_dir, options.is_top_level, options);
     }
 }
+module.exports.runUninstallPlatform = runUninstallPlatform;
 
 // Returns a promise.
 function handleUninstall(actions, platform, pluginInfo, project_dir, www_dir, plugins_dir, is_top_level, options) {
@@ -359,3 +353,4 @@ function handleUninstall(actions, platform, pluginInfo, project_dir, www_dir, pl
         return Q(result);
     });
 }
+module.exports.handleUninstall = handleUninstall;

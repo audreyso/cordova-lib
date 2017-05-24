@@ -3,6 +3,7 @@ var	Q = require('q'),
 	install = rewire('../src/plugman/install'),
     events = require('cordova-common').events,
     plugman = require('../src/plugman/plugman'),
+    fs = require('fs'),
     semver = require('semver');
 
 describe('install functions should be called successfully', function() {
@@ -77,6 +78,14 @@ describe('install functions should be called successfully', function() {
 		done();
 	},6000);
 
+	it('should throw script path error', function(done) {
+		spyOn(events, 'emit').and.returnValue(true);
+		install.callEngineScripts(['windows'], 'project_dir');
+		expect(events.emit.calls.count()).toBe(1);
+		expect(events.emit.calls.argsFor(0)[1]).toContain('version not detected (lacks script null ), continuing.');
+		done();
+	},6000);
+
 	it('should successfully call cleanVersionOutput', function(done) {
 		spyOn(install, 'cleanVersionOutput').and.returnValue(true);
 		spyOn(events, 'emit').and.returnValue(true);
@@ -86,7 +95,7 @@ describe('install functions should be called successfully', function() {
 		done();
 	},6000);
 
-	it('should successfully call cleanVersionOutput', function(done) {
+	it('should throw error when using development branch', function(done) {
 		spyOn(events, 'emit').and.returnValue(true);
 		var result = install.cleanVersionOutput('dev', 'branchname');
 		expect(events.emit.calls.argsFor(0)[1]).toBe('branchname has been detected as using a development branch. Attemping to install anyways.');
