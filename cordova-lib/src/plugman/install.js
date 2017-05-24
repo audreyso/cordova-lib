@@ -86,10 +86,8 @@ module.exports = function installPlugin(platform, project_dir, id, plugins_dir, 
 // Returns a promise.
 function possiblyFetch(id, plugins_dir, options) {
     var parsedSpec = pluginSpec.parse(id);
-
     // if plugin is a relative path, check if it already exists
     var plugin_src_dir = isAbsolutePath(id) ? id : path.join(plugins_dir, parsedSpec.id);
-
     // Check that the plugin has already been fetched.
     if (fs.existsSync(plugin_src_dir)) {
         return Q(plugin_src_dir);
@@ -100,6 +98,7 @@ function possiblyFetch(id, plugins_dir, options) {
     });
     return plugman.raw.fetch(id, plugins_dir, opts);
 }
+module.exports.possiblyFetch = possiblyFetch;
 
 function checkEngines(engines) {
 
@@ -114,6 +113,7 @@ function checkEngines(engines) {
         // suffix is equal to one of range bounds, for example: 5.1.0-dev >= 5.1.0.
         // However this shouldn't be a problem, because this only should happen in dev workflow.
         engine.currentVersion = engine.currentVersion && engine.currentVersion.replace(/-dev|-nightly.*$/, '');
+
         if ( semver.satisfies(engine.currentVersion, engine.minVersion, /*loose=*/true) || engine.currentVersion === null ) {
             continue; // engine ok!
         } else {
@@ -127,6 +127,7 @@ function checkEngines(engines) {
 
     return Q(true);
 }
+module.exports.checkEngines = checkEngines;
 
 function cleanVersionOutput(version, name){
     var out = version.trim();
@@ -161,17 +162,16 @@ function cleanVersionOutput(version, name){
 
     return out;
 }
+module.exports.cleanVersionOutput = cleanVersionOutput;
 
 // exec engine scripts in order to get the current engine version
 // Returns a promise for the array of engines.
 function callEngineScripts(engines, project_dir) {
-
     return Q.all(
         engines.map(function(engine){
             // CB-5192; on Windows scriptSrc doesn't have file extension so we shouldn't check whether the script exists
             var scriptPath = engine.scriptSrc ? '"' + engine.scriptSrc + '"' : null;
             if(scriptPath && (isWindows || fs.existsSync(engine.scriptSrc)) ) {
-
                 var d = Q.defer();
                 if(!isWindows) { // not required on Windows
                     fs.chmodSync(engine.scriptSrc, '755');
@@ -205,6 +205,7 @@ function callEngineScripts(engines, project_dir) {
         })
     );
 }
+module.exports.callEngineScripts = callEngineScripts;
 
 // return only the engines we care about/need
 function getEngines(pluginInfo, platform, project_dir, plugin_dir){
@@ -256,7 +257,7 @@ function getEngines(pluginInfo, platform, project_dir, plugin_dir){
     if(cordovaEngineIndex && cordovaPlatformEngineIndex) uncheckedEngines.pop(cordovaEngineIndex);
     return uncheckedEngines;
 }
-
+module.exports.getEngines = getEngines;
 
 // possible options: cli_variables, www_dir, is_top_level
 // Returns a promise.
@@ -401,14 +402,11 @@ function runInstall(actions, platform, project_dir, plugin_dir, plugins_dir, opt
 
 function installDependencies(install, dependencies, options) {
     events.emit('verbose', 'Dependencies detected, iterating through them...');
-
     var top_plugins = path.join(options.plugin_src_dir || install.top_plugin_dir, '..');
-
     // Add directory of top-level plugin to search path
     options.searchpath = options.searchpath || [];
     if( top_plugins != install.plugins_dir && options.searchpath.indexOf(top_plugins) == -1 )
         options.searchpath.push(top_plugins);
-
     // Search for dependency by Id is:
     // a) Look for {$top_plugins}/{$depId} directory
     // b) Scan the top level plugin directory {$top_plugins} for matching id (searchpath)
@@ -439,6 +437,7 @@ function installDependencies(install, dependencies, options) {
 
     }, Q(true));
 }
+module.exports.installDependencies = installDependencies;
 
 function tryFetchDependency(dep, install, options) {
 
@@ -535,6 +534,7 @@ function tryFetchDependency(dep, install, options) {
 
     return Q(dep.url);
 }
+module.exports.tryFetchDependency = tryFetchDependency;
 
 function installDependency(dep, install, options) {
 
@@ -608,6 +608,7 @@ function installDependency(dep, install, options) {
         );
     }
 }
+module.exports.installDependency = installDependency;
 
 function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, plugin_dir, filtered_variables, options) {
 
@@ -656,6 +657,7 @@ function handleInstall(actions, pluginInfo, platform, project_dir, plugins_dir, 
         return Q(result);
     });
 }
+module.exports.handleInstall = handleInstall;
 
 function interp_vars(vars, text) {
     vars && Object.keys(vars).forEach(function(key) {
@@ -664,12 +666,13 @@ function interp_vars(vars, text) {
     });
     return text;
 }
+module.exports.interp_vars = interp_vars;
 
 function isAbsolutePath(_path) {
     // some valid abs paths: 'c:' '/' '\' and possibly ? 'file:' 'http:'
     return _path && (_path.charAt(0) === path.sep || _path.indexOf(':') > 0);
 }
-
+module.exports.isAbsolutePath = isAbsolutePath;
 
 // Copy or link a plugin from plugin_dir to plugins_dir/plugin_id.
 function copyPlugin(plugin_src_dir, plugins_dir, link, pluginInfoProvider) {
@@ -688,6 +691,6 @@ function copyPlugin(plugin_src_dir, plugins_dir, link, pluginInfoProvider) {
     }
     pluginInfo.dir = dest;
     pluginInfoProvider.put(pluginInfo);
-
     return dest;
 }
+module.exports.copyPlugin = copyPlugin;
