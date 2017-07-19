@@ -25,30 +25,30 @@ var webosParser = require('../../../src/cordova/metadata/webos_parser'),
     ConfigParser = require('cordova-common').ConfigParser;
 
 var cfg = new ConfigParser(path.join(__dirname, '..', 'test-config.xml'));
-describe('webos project parser', function() {
+describe('webos project parser', function () {
     var proj = path.join('some', 'path');
     var exists, exec, custom;
-    beforeEach(function() {
+    beforeEach(function () {
         exists = spyOn(fs, 'existsSync').and.returnValue(true);
-        exec = spyOn(shell, 'exec').and.callFake(function(cmd, opts, cb) {
+        exec = spyOn(shell, 'exec').and.callFake(function (cmd, opts, cb) {
             cb(0, '');
         });
         custom = spyOn(config, 'has_custom_path').and.returnValue(false);
     });
 
-    describe('constructions', function() {
-        it('should create an instance with a path', function() {
-            expect(function() {
+    describe('constructions', function () {
+        it('should create an instance with a path', function () {
+            expect(function () {
                 var p = new webosParser(proj);
                 expect(p.path).toEqual(proj);
             }).not.toThrow();
         });
     });
 
-    describe('instance', function() {
+    describe('instance', function () {
         var p, cp, rm, is_cordova, write, read;
         var wos_proj = path.join(proj, 'platforms', 'webos');
-        beforeEach(function() {
+        beforeEach(function () {
             p = new webosParser(wos_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
@@ -57,17 +57,17 @@ describe('webos project parser', function() {
             read = spyOn(fs, 'readFileSync').and.returnValue('');
         });
 
-        describe('update_from_config method', function() {
-            beforeEach(function() {
-                cfg.name = function() { return 'testname'; };
-                cfg.packageName = function() { return 'testpkg'; };
-                cfg.version = function() { return '1.0'; };
+        describe('update_from_config method', function () {
+            beforeEach(function () {
+                cfg.name = function () { return 'testname'; };
+                cfg.packageName = function () { return 'testpkg'; };
+                cfg.version = function () { return '1.0'; };
             });
 
           /*  it('should write appinfo.json', function() {
                 //p.update_from_config(cfg);
                 //expect(write.mostRecentCall.args[0]).toEqual('appinfo.json');
-            });*/
+            }); */
         });
     });
 });

@@ -48,58 +48,58 @@ var TEST_XML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '    <preference name="webviewbounce" value="true" />\n' +
     '</widget>\n';
 
-describe('blackberry10 project parser', function() {
+describe('blackberry10 project parser', function () {
     var proj = '/some/path';
     var exists, custom;
-    beforeEach(function() {
+    beforeEach(function () {
         exists = spyOn(fs, 'existsSync').and.returnValue(true);
         custom = spyOn(config, 'has_custom_path').and.returnValue(false);
         spyOn(ConfigParser.prototype, 'write');
-        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function() {
+        spyOn(xmlHelpers, 'parseElementtreeSync').and.callFake(function () {
             return new et.ElementTree(et.XML(TEST_XML));
         });
     });
 
-    function wrapper(p, done, post) {
-        p.then(post, function(err) {
+    function wrapper (p, done, post) {
+        p.then(post, function (err) {
             expect(err).toBeUndefined();
         }).fin(done);
     }
 
-    function errorWrapper(p, done, post) {
-        p.then(function() {
+    function errorWrapper (p, done, post) {
+        p.then(function () {
             expect('this call').toBe('fail');
         }, post).fin(done);
     }
 
-    describe('constructions', function() {
-        it('should throw an exception with a path that is not a native blackberry project', function() {
+    describe('constructions', function () {
+        it('should throw an exception with a path that is not a native blackberry project', function () {
             exists.and.returnValue(false);
-            expect(function() {
+            expect(function () {
                 new blackberryParser(proj);
             }).toThrow();
         });
-        it('should accept a proper native blackberry project path as construction parameter', function() {
+        it('should accept a proper native blackberry project path as construction parameter', function () {
             var project;
-            expect(function() {
+            expect(function () {
                 project = new blackberryParser(proj);
             }).not.toThrow();
             expect(project).toBeDefined();
         });
-        it('should be an instance of Parser', function() {
+        it('should be an instance of Parser', function () {
             expect(new blackberryParser(proj) instanceof Parser).toBe(true);
         });
-        it('should call super with the correct arguments', function() {
+        it('should call super with the correct arguments', function () {
             var call = spyOn(Parser, 'call');
             var p = new blackberryParser(proj);
             expect(call).toHaveBeenCalledWith(p, 'blackberry10', proj);
         });
     });
 
-    describe('instance', function() {
+    describe('instance', function () {
         var p, cp, rm, mkdir, is_cordova, write, read;
         var bb_proj = path.join(proj, 'platforms', 'blackberry10');
-        beforeEach(function() {
+        beforeEach(function () {
             p = new blackberryParser(bb_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
@@ -109,11 +109,11 @@ describe('blackberry10 project parser', function() {
             read = spyOn(fs, 'readFileSync');
         });
 
-        describe('update_from_config method', function() {
+        describe('update_from_config method', function () {
             var xml_name, xml_pkg, xml_version, xml_access_rm, xml_update,
                 xml_append, xml_content, xml_access_add, xml_preference_remove,
                 xml_preference_add;
-            beforeEach(function() {
+            beforeEach(function () {
                 xml_content = jasmine.createSpy('xml content');
                 xml_name = jasmine.createSpy('xml name');
                 xml_pkg = jasmine.createSpy('xml pkg');
@@ -129,84 +129,84 @@ describe('blackberry10 project parser', function() {
                 p.xml.version = xml_version;
                 p.xml.content = xml_content;
                 p.xml.access = {
-                    remove:xml_access_rm,
+                    remove: xml_access_rm,
                     add: xml_access_add
                 };
                 p.xml.update = xml_update;
                 p.xml.doc = {
-                    getroot:function() { return { append:xml_append}; }
+                    getroot: function () { return { append: xml_append}; }
                 };
                 p.xml.preference = {
                     add: xml_preference_add,
                     remove: xml_preference_remove
                 };
-                cfg.name = function() { return 'testname'; };
-                cfg.packageName = function() { return 'testpkg'; };
-                cfg.version = function() { return 'one point oh'; };
+                cfg.name = function () { return 'testname'; };
+                cfg.packageName = function () { return 'testpkg'; };
+                cfg.version = function () { return 'one point oh'; };
             });
         });
-        describe('www_dir method', function() {
-            it('should return /www', function() {
+        describe('www_dir method', function () {
+            it('should return /www', function () {
                 expect(p.www_dir()).toEqual(path.join(bb_proj, 'www'));
             });
         });
-        describe('config_xml method', function() {
-            it('should return the location of the config.xml', function() {
+        describe('config_xml method', function () {
+            it('should return the location of the config.xml', function () {
                 expect(p.config_xml()).toEqual(path.join(proj, 'platforms', 'blackberry10', 'www', 'config.xml'));
             });
         });
-        describe('update_www method', function() {
+        describe('update_www method', function () {
 
-            it('should rm project-level www and cp in platform agnostic www', function() {
+            it('should rm project-level www and cp in platform agnostic www', function () {
                 p.update_www();
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
             });
         });
-        describe('update_overrides method', function() {
-            it('should do nothing if merges directory does not exist', function() {
+        describe('update_overrides method', function () {
+            it('should do nothing if merges directory does not exist', function () {
                 exists.and.returnValue(false);
                 p.update_overrides();
                 expect(cp).not.toHaveBeenCalled();
             });
-            it('should copy merges path into www', function() {
+            it('should copy merges path into www', function () {
                 p.update_overrides();
                 expect(cp).toHaveBeenCalledWith('-rf', path.join(proj, 'merges', 'blackberry10', '*'), path.join(proj, 'platforms', 'blackberry10', 'www'));
             });
         });
-        describe('update_project method', function() {
+        describe('update_project method', function () {
             var config, www, overrides, svn, parse;
-            beforeEach(function() {
+            beforeEach(function () {
                 config = spyOn(p, 'update_from_config');
                 www = spyOn(p, 'update_www');
                 overrides = spyOn(p, 'update_overrides');
                 svn = spyOn(util, 'deleteSvnFolders');
-                parse = spyOn(JSON, 'parse').and.returnValue({blackberry:{qnx:{}}});
+                parse = spyOn(JSON, 'parse').and.returnValue({blackberry: {qnx: {}}});
             });
-            it('should call update_from_config', function(done) {
-                wrapper(p.update_project(), done, function() {
+            it('should call update_from_config', function (done) {
+                wrapper(p.update_project(), done, function () {
                     expect(config).toHaveBeenCalled();
                 });
             });
-            it('should throw if update_from_config throws', function(done) {
+            it('should throw if update_from_config throws', function (done) {
                 var err = new Error('uh oh!');
-                config.and.callFake(function() { throw err; });
-                errorWrapper(p.update_project({}), done, function(e) {
+                config.and.callFake(function () { throw err; });
+                errorWrapper(p.update_project({}), done, function (e) {
                     expect(e).toEqual(err);
                 });
             });
-            it('should not call update_www', function(done) {
-                wrapper(p.update_project(), done, function() {
+            it('should not call update_www', function (done) {
+                wrapper(p.update_project(), done, function () {
                     expect(www).not.toHaveBeenCalled();
                 });
             });
-            it('should call update_overrides', function(done) {
-                wrapper(p.update_project(), done, function() {
+            it('should call update_overrides', function (done) {
+                wrapper(p.update_project(), done, function () {
                     expect(overrides).toHaveBeenCalled();
                 });
             });
-            it('should call deleteSvnFolders', function(done) {
-                wrapper(p.update_project(), done, function() {
+            it('should call deleteSvnFolders', function (done) {
+                wrapper(p.update_project(), done, function () {
                     expect(svn).toHaveBeenCalled();
                 });
             });

@@ -24,37 +24,37 @@ var browserParser = require('../../../src/cordova/metadata/browser_parser'),
     fs = require('fs'),
     Parser = require('../../../src/cordova/metadata/parser');
 
-describe('browser project parser', function() {
+describe('browser project parser', function () {
     var proj = path.join('some', 'path');
     var exists;
 
-    beforeEach(function() {
+    beforeEach(function () {
         exists = spyOn(fs, 'existsSync').and.returnValue(true);
-        spyOn(browserParser,'dirExists').and.returnValue(true);
+        spyOn(browserParser, 'dirExists').and.returnValue(true);
     });
 
-    describe('constructions', function() {
-        it('should create an instance with a path', function() {
-            expect(function() {
+    describe('constructions', function () {
+        it('should create an instance with a path', function () {
+            expect(function () {
                 var p = new browserParser(proj);
                 expect(p.path).toEqual(proj);
             }).not.toThrow();
         });
-        it('should be an instance of Parser', function() {
+        it('should be an instance of Parser', function () {
             expect(new browserParser(proj) instanceof Parser).toBe(true);
         });
-        it('should call super with the correct arguments', function() {
+        it('should call super with the correct arguments', function () {
             var call = spyOn(Parser, 'call');
             var p = new browserParser(proj);
             expect(call).toHaveBeenCalledWith(p, 'browser', proj);
         });
     });
 
-    describe('instance', function() {
+    describe('instance', function () {
         var p, cp, rm, mkdir, is_cordova;
         var browser_proj = path.join(proj, 'platforms', 'browser');
 
-        beforeEach(function() {
+        beforeEach(function () {
             p = new browserParser(browser_proj);
             cp = spyOn(shell, 'cp');
             rm = spyOn(shell, 'rm');
@@ -62,34 +62,34 @@ describe('browser project parser', function() {
             is_cordova = spyOn(util, 'isCordova').and.returnValue(proj);
         });
 
-        describe('www_dir method', function() {
-            it('should return /www', function() {
+        describe('www_dir method', function () {
+            it('should return /www', function () {
                 expect(p.www_dir()).toEqual(path.join(browser_proj, 'www'));
             });
         });
 
-        describe('config_xml method', function() {
-            it('should return the location of config.xml', function() {
+        describe('config_xml method', function () {
+            it('should return the location of config.xml', function () {
                 expect(p.config_xml()).toEqual(path.join(proj, 'platforms', 'browser', 'config.xml'));
             });
         });
 
-        describe('update_www method', function() {
-            it('should rm project-level www and cp in platform agnostic www', function() {
+        describe('update_www method', function () {
+            it('should rm project-level www and cp in platform agnostic www', function () {
                 p.update_www();
                 expect(rm).toHaveBeenCalled();
                 expect(cp).toHaveBeenCalled();
             });
         });
 
-        describe('update_overrides method', function() {
-            it('should do nothing if merges directory does not exist', function() {
+        describe('update_overrides method', function () {
+            it('should do nothing if merges directory does not exist', function () {
                 exists.and.returnValue(false);
                 p.update_overrides();
                 expect(cp).not.toHaveBeenCalled();
             });
 
-            it('should copy merges path into www', function() {
+            it('should copy merges path into www', function () {
                 p.update_overrides();
                 expect(cp).toHaveBeenCalledWith('-rf', path.join(proj, 'merges', 'browser', '*'), path.join(proj, 'platforms', 'browser', 'www'));
             });

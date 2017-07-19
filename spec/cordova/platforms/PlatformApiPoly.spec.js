@@ -81,19 +81,19 @@ describe('PlatformApi polyfill', function () {
 
     it('should be constructable', function () {
         var api;
-        expect(function(){api = new PlatformApiPoly(PLATFORM, PLATFORM_ROOT);}).not.toThrow();
+        expect(function () { api = new PlatformApiPoly(PLATFORM, PLATFORM_ROOT); }).not.toThrow();
         expect(api).toEqual(jasmine.any(PlatformApiPoly));
     });
 
     it('should fail when unknown platform is specified', function () {
         var api;
-        expect(function(){api = new PlatformApiPoly('fakePlatform', PLATFORM_ROOT);}).toThrow();
+        expect(function () { api = new PlatformApiPoly('fakePlatform', PLATFORM_ROOT); }).toThrow();
     });
 
     it('should fail when mandatory argument is not specified', function () {
         var api;
-        expect(function(){api = new PlatformApiPoly(PLATFORM);}).toThrow();
-        expect(function(){api = new PlatformApiPoly(null, PLATFORM_ROOT);}).toThrow();
+        expect(function () { api = new PlatformApiPoly(PLATFORM); }).toThrow();
+        expect(function () { api = new PlatformApiPoly(null, PLATFORM_ROOT); }).toThrow();
     });
 
     it('should have fields defined', function () {
@@ -141,7 +141,7 @@ describe('PlatformApi polyfill', function () {
 
             it('should create/update platform through running platforms\' scripts', function (done) {
                 Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
-                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
+                    PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(spawn).toHaveBeenCalled();
                     expect(spawn.calls.count()).toBe(2);
@@ -152,7 +152,7 @@ describe('PlatformApi polyfill', function () {
 
             it('should pass down arguments to platforms\' scripts', function (done) {
                 Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
-                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
+                    PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(spawn).toHaveBeenCalled();
                     expect(spawn.calls.count()).toBe(2);
@@ -167,7 +167,7 @@ describe('PlatformApi polyfill', function () {
 
             it('should copy cordova JS sources into created platform', function (done) {
                 Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG, OPTIONS),
-                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
+                    PlatformApiPoly.updatePlatform(PLATFORM_ROOT, OPTIONS)])
                 .then(function () {
                     expect(shell.cp).toHaveBeenCalled();
                     expect(shell.cp.calls.count()).toBe(2);
@@ -180,7 +180,7 @@ describe('PlatformApi polyfill', function () {
 
             it('should fail immediately if options.platformInfo is not specified', function (done) {
                 Q.all([PlatformApiPoly.createPlatform(PLATFORM_ROOT, FAKE_CONFIG),
-                       PlatformApiPoly.updatePlatform(PLATFORM_ROOT, FAKE_CONFIG)])
+                    PlatformApiPoly.updatePlatform(PLATFORM_ROOT, FAKE_CONFIG)])
                 .then(success)
                 .fail(fail)
                 .fin(function function_name (argument) {
@@ -305,7 +305,7 @@ describe('PlatformApi polyfill', function () {
                 spawnSpy.and.returnValue(Q());
                 platformApi.build(options)
                 .then(function () {
-                    ['--release', '--nobuild', '--device', '--target=' + options.target, '--archs=arm,x86', '--buildConfig='  +options.buildConfig]
+                    ['--release', '--nobuild', '--device', '--target=' + options.target, '--archs=arm,x86', '--buildConfig=' + options.buildConfig]
                     .forEach(function (arg) {
                         expect(spawnSpy.calls[0].args[1]).toContain(arg);
                     });
