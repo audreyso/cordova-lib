@@ -124,6 +124,30 @@ function add (projectRoot, hooksRunner, opts) {
 
                     // Iterate (in serial!) over all platforms in the project and install the plugin.
                     return chainMap(platformList, function (platform) {
+
+                        // Using pluginVariables, which come from getPreferences --> var pluginVariables = pluginInfo.getPreferences();
+                        // Check if there are variables and if the platform is android
+                        if (pluginVariables = {} && platform === 'android') {
+                            console.log('pluginVariables are empty AND platform === android');
+                        } else if ((pluginVariables && pluginVariables!== {}) && platform === 'android')  {
+                            console.log('pluginVariables are not empty AND platform is android');
+                            // if it is android, check each plugin variable
+                        }
+
+                        // OR!
+
+                        // Using configVariables, which come from --> var configVariables = pluginEntry ? pluginEntry.variables : {};
+                        // Check if there are variables and if the platform is android
+                        if (configVariables = {} && platform === 'android') {
+                            console.log('configVariables are {} AND platform === android');
+                        } else if ((configVariables && configVariables!== {}) && platform === 'android')  {
+                            console.log('configVariables are not {} AND platform === android');
+                            // If it is android, check each plugin variable
+                        }
+
+                        // OR should we use opts.cli_variables, which comes from opts.cli_variables = opts.cli_variables || {};
+                        // OR a different variable that reads from plugin.xml?
+
                         var platformRoot = path.join(projectRoot, 'platforms', platform);
                         var options = {
                             cli_variables: opts.cli_variables || {},
