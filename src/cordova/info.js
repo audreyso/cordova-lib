@@ -92,7 +92,7 @@ function getPlatforms (projectRoot) {
 }
 
 function listPlugins (projectRoot) {
-    var pluginPath = path.join(projectRoot, 'plugins');
+    var pluginPath = path.join(projectRoot, 'node_modules');
     var plugins = cordova_util.findPlugins(pluginPath);
 
     if (!plugins.length) {

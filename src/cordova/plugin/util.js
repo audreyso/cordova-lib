@@ -28,7 +28,7 @@ module.exports.getInstalledPlugins = getInstalledPlugins;
 module.exports.mergeVariables = mergeVariables;
 
 function getInstalledPlugins (projectRoot) {
-    var pluginsDir = path.join(projectRoot, 'plugins');
+    var pluginsDir = path.join(projectRoot, 'node_modules');
     // TODO: This should list based off of platform.json, not directories within plugins/
     var pluginInfoProvider = new PluginInfoProvider();
     return pluginInfoProvider.getAllWithinSearchPath(pluginsDir);
