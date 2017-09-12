@@ -38,7 +38,7 @@ function remove (projectRoot, targets, hooksRunner, opts) {
         return Q.reject(new CordovaError('No plugin specified. Please specify a plugin to remove. See: ' + cordova_util.binname + ' plugin list.'));
     }
     var config_json = config.read(projectRoot);
-    var pluginPath = path.join(projectRoot, 'plugins');
+    var pluginPath = path.join(projectRoot, 'node_modules');
     var plugins = cordova_util.findPlugins(pluginPath);
     var platformList = cordova_util.listPlatforms(projectRoot);
     var shouldRunPrepare = false;

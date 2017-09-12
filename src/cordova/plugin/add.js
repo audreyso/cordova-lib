@@ -51,7 +51,7 @@ function add (projectRoot, hooksRunner, opts) {
     }
     var pluginInfo;
     var shouldRunPrepare = false;
-    var pluginPath = path.join(projectRoot, 'plugins');
+    var pluginPath = path.join(projectRoot, 'node_modules');
     var platformList = cordova_util.listPlatforms(projectRoot);
     var config_json = config.read(projectRoot);
     var xml = cordova_util.projectConfig(projectRoot);

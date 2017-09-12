@@ -126,7 +126,7 @@ describe('cordova/plugin/add', function () {
             it('should determine where to fetch a plugin from using determinePluginTarget and invoke plugman.fetch with the resolved target', function (done) {
                 add(projectRoot, hook_mock, {plugins: ['cordova-plugin-device']}).then(function () {
                     expect(add.determinePluginTarget).toHaveBeenCalledWith(projectRoot, jasmine.any(Object), 'cordova-plugin-device', jasmine.any(Object));
-                    expect(plugman.fetch).toHaveBeenCalledWith('cordova-plugin-device', path.join(projectRoot, 'plugins'), jasmine.any(Object));
+                    expect(plugman.fetch).toHaveBeenCalledWith('cordova-plugin-device', path.join(projectRoot, 'node_modules'), jasmine.any(Object));
                 }).fail(function (e) {
                     fail('fail handler unexpectedly invoked');
                     console.log(e);
