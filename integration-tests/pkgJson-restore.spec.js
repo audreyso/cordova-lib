@@ -6,9 +6,7 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -762,7 +760,7 @@ describe('update config.xml to use the variable found in pkg.json', function () 
 
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true});
+            return prepare({'fetch': true, 'save':true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -847,7 +845,7 @@ describe('update pkg.json to include plugin and variable found in config.xml', f
 
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true});
+            return prepare({'fetch': true, 'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -949,7 +947,7 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
 
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true});
+            return prepare({'fetch': true, 'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -981,9 +979,9 @@ describe('update pkg.json AND config.xml to include all plugins and merge unique
             expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toEqual({ variable_1: ' ', variable_2: ' ', variable_3: 'value_3' });
             // Expect config.xml to have the plugins from pkg.json.
             expect(Object.keys(configPlugins).length === 3);
-            expect(configPlugins.indexOf('cordova-plugin-device')).toEqual(0);
+            expect(configPlugins.indexOf('cordova-plugin-device')).toEqual(2);
             expect(configPlugins.indexOf('cordova-plugin-splashscreen')).toEqual(1);
-            expect(configPlugins.indexOf('cordova-plugin-camera')).toEqual(2);
+            expect(configPlugins.indexOf('cordova-plugin-camera')).toEqual(0);
             // Expect all 3 plugins to be restored.
             expect(path.join(pluginsFolderPath13, 'cordova-plugin-device')).toExist();
             expect(path.join(pluginsFolderPath13, 'cordova-plugin-camera')).toExist();
@@ -1079,7 +1077,7 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
 
         emptyPlatformList().then(function () {
             // Run cordova prepare
-            return prepare({'fetch': true});
+            return prepare({'save': true});
         }).then(function () {
             // Delete any previous caches of require(package.json)
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
@@ -1110,9 +1108,9 @@ describe('update pkg.json AND config.xml to include all plugins/merge variables 
             }
             // Config.xml now has the camera, splashscreen, and device plugin
             expect(Object.keys(configPlugins).length === 3);
-            expect(configPlugins.indexOf('cordova-plugin-splashscreen')).toEqual(0);
-            expect(configPlugins.indexOf('cordova-plugin-camera')).toEqual(1);
-            expect(configPlugins.indexOf('cordova-plugin-device')).toEqual(2);
+            expect(configPlugins.indexOf('cordova-plugin-splashscreen')).toEqual(2);
+            expect(configPlugins.indexOf('cordova-plugin-camera')).toEqual(0);
+            expect(configPlugins.indexOf('cordova-plugin-device')).toEqual(1);
             // Pkg.json has all 3 plugins with the correct specs
             expect(Object.keys(pkgJson.cordova.plugins).length === 3);
             expect(pkgJson.cordova.plugins['cordova-plugin-camera']).toBeDefined();
@@ -1199,7 +1197,7 @@ describe('update config.xml to include the plugin that is in pkg.json', function
 
         emptyPlatformList().then(function () {
             // Run cordova prepare.
-            return prepare({'fetch': true});
+            return prepare({'fetch': false, 'save':true});
         }).then(function () {
             // Delete any previous caches of require(package.json).
             pkgJson = cordova_util.requireNoCache(pkgJsonPath);
