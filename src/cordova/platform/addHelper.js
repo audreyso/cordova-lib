@@ -269,7 +269,6 @@ function addHelper (cmd, hooksRunner, projectRoot, targets, opts) {
                 });
                 // Save to package.json.
                 if (modifiedPkgJson === true) {
-                    pkgJson.cordova.platforms = pkgJson.cordova.platforms;
                     fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2), 'utf8');
                 }
             });
